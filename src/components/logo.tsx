@@ -3,7 +3,7 @@ import { ScanBarcode } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const sizes = {
-  sm: { box: "size-8 rounded-lg", icon: "size-[18px]", text: "text-lg" },
+  sm: { box: "size-8 rounded-lg", icon: "size-4.5", text: "text-lg" },
   md: { box: "size-9 rounded-lg", icon: "size-5", text: "text-xl" },
 } as const;
 
