@@ -1,0 +1,14 @@
+{
+  "$schema": "./project.config.schema.json",
+  "project": "poupe-certo-front",
+  "preset": "prisma-postgres",
+
+  "frontend": "nextjs",
+  "backend": "nestjs",
+  "database": null,
+  "auth": "better-auth",
+  "email": null,
+  "storage": null,
+
+  "notes": "Frontend puro — backend (Nest.js + Prisma + PostgreSQL) fica em repositório separado, ainda não criado. Este repo não tem Prisma nem acesso a banco: consome a API do backend via axios/react-query (NEXT_PUBLIC_API_URL). Better Auth roda no backend; aqui só existe o client (src/lib/auth-client.ts) apontando pra essa mesma URL. Ajustar 'backend' se a stack do outro repo mudar."
+}
