@@ -22,7 +22,7 @@ import type { Product } from "@/lib/mock/catalog";
 
 export function ConfirmPriceForm({ product }: Readonly<{ product: Product }>) {
   const router = useRouter();
-  const { isReady } = useRequireAuth(`/confirmar-preco?ean=${product.ean}`);
+  const { isReady } = useRequireAuth(`/confirm-price?ean=${product.ean}`);
   const {
     register,
     control,

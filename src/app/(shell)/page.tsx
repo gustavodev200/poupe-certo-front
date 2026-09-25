@@ -34,7 +34,7 @@ export default function HomePage() {
             </p>
             <div className="flex flex-wrap gap-2">
               <Button asChild size="lg" variant="secondary" className="gap-2">
-                <Link href="/escanear">
+                <Link href="/scan">
                   <ScanBarcode className="size-4.5" />
                   Escanear produto
                 </Link>
@@ -45,7 +45,7 @@ export default function HomePage() {
                 variant="outline"
                 className="border-primary-foreground/20 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
               >
-                <Link href="/buscar">Ver preços</Link>
+                <Link href="/search">Ver preços</Link>
               </Button>
             </div>
             <div className="mt-4.5 flex flex-wrap items-center gap-1.5">
@@ -55,7 +55,7 @@ export default function HomePage() {
               {TRENDING_SEARCHES.map((t) => (
                 <Link
                   key={t}
-                  href={`/buscar?q=${encodeURIComponent(t)}`}
+                  href={`/search?q=${encodeURIComponent(t)}`}
                   className="rounded-lg border border-primary-foreground/15 px-2.5 py-1 text-xs font-medium no-underline"
                 >
                   {t}
@@ -118,7 +118,7 @@ export default function HomePage() {
                 ))}
               </div>
               <Link
-                href="/perfil"
+                href="/profile"
                 className="mt-3.5 inline-block text-sm font-medium underline underline-offset-4"
               >
                 Ver meu ranking
@@ -139,7 +139,7 @@ export default function HomePage() {
             </p>
           </div>
           <Link
-            href="/buscar"
+            href="/search"
             className="text-sm font-medium underline underline-offset-4"
           >
             Ver todos
@@ -151,7 +151,7 @@ export default function HomePage() {
             return (
               <Link
                 key={p.ean}
-                href={`/produto/${p.ean}`}
+                href={`/product/${p.ean}`}
                 className="rounded-xl border border-border p-3.5 shadow-xs"
               >
                 <div className="mb-3 aspect-[1.2] w-full rounded-lg bg-muted" />
@@ -255,14 +255,14 @@ export default function HomePage() {
           </p>
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="secondary">
-              <Link href="/escanear">Escanear agora</Link>
+              <Link href="/scan">Escanear agora</Link>
             </Button>
             <Button
               asChild
               variant="outline"
               className="border-primary-foreground/20 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
             >
-              <Link href="/perfil">Meu perfil</Link>
+              <Link href="/profile">Meu perfil</Link>
             </Button>
           </div>
         </div>

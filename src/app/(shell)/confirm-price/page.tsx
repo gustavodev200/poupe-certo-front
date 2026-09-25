@@ -4,7 +4,7 @@ import { getProductByEan } from "@/lib/mock/catalog";
 import { ConfirmPriceForm } from "./confirm-price-form";
 
 export default async function ConfirmarPrecoPage(
-  props: PageProps<"/confirmar-preco">
+  props: PageProps<"/confirm-price">
 ) {
   const searchParams = await props.searchParams;
   const ean = typeof searchParams.ean === "string" ? searchParams.ean : "";

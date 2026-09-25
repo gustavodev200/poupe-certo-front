@@ -25,11 +25,16 @@ export function useLocationHydrated(): boolean {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    if (useLocationStore.persist.hasHydrated()) {
-      setHydrated(true);
-      return;
-    }
-    return useLocationStore.persist.onFinishHydration(() => setHydrated(true));
+    const unsubscribe = useLocationStore.persist.onFinishHydration(() =>
+      setHydrated(true)
+    );
+    const id = setTimeout(() => {
+      if (useLocationStore.persist.hasHydrated()) setHydrated(true);
+    }, 0);
+    return () => {
+      unsubscribe();
+      clearTimeout(id);
+    };
   }, []);
 
   return hydrated;

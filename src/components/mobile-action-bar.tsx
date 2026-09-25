@@ -12,13 +12,13 @@ export function MobileActionBar() {
         </Link>
       </Button>
       <Button asChild className="flex-1 gap-2">
-        <Link href="/escanear">
+        <Link href="/scan">
           <ScanBarcode className="size-4.5" />
           Escanear preço
         </Link>
       </Button>
       <Button asChild variant="outline" size="icon-lg">
-        <Link href="/perfil">
+        <Link href="/profile">
           <User className="size-4.5 opacity-65" />
         </Link>
       </Button>

@@ -45,7 +45,7 @@ export function SiteHeader() {
   function submitSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const q = query.trim();
-    router.push(q ? `/buscar?q=${encodeURIComponent(q)}` : "/buscar");
+    router.push(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
   }
 
   const cityLabel = city ? `${city}, ${uf}` : "Escolher cidade";
@@ -91,13 +91,13 @@ export function SiteHeader() {
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
           <Button asChild className="hidden gap-1.5 md:inline-flex">
-            <Link href="/escanear">
+            <Link href="/scan">
               <ScanBarcode className="size-4" />
               Escanear preço
             </Link>
           </Button>
           <ModeToggle />
-          <Link href="/perfil">
+          <Link href="/profile">
             <Avatar>
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
@@ -123,7 +123,7 @@ export function SiteHeader() {
 
       <div className="no-scrollbar mx-auto flex max-w-6xl gap-1.5 overflow-x-auto px-4 pb-2.5 md:px-6">
         <Link
-          href="/buscar"
+          href="/search"
           className="flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium"
         >
           <LayoutGrid className="size-3.5 opacity-60" />
@@ -134,7 +134,7 @@ export function SiteHeader() {
           return (
             <Link
               key={cat.id}
-              href={`/buscar?categoria=${cat.id}`}
+              href={`/search?categoria=${cat.id}`}
               className="flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium"
             >
               <Icon className="size-3.5 opacity-60" />

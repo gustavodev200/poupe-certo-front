@@ -40,7 +40,7 @@ const FRAME_COLOR: Record<ScanState, string> = {
 
 export default function EscanearPage() {
   const router = useRouter();
-  const { isReady } = useRequireAuth("/escanear");
+  const { isReady } = useRequireAuth("/scan");
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -52,7 +52,7 @@ export default function EscanearPage() {
 
   function goToResult(ean: string) {
     const known = getProductByEan(ean);
-    router.push(known ? `/confirmar-preco?ean=${ean}` : `/novo-produto?ean=${ean}`);
+    router.push(known ? `/confirm-price?ean=${ean}` : `/new-product?ean=${ean}`);
   }
 
   function stopCamera() {

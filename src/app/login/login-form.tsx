@@ -26,7 +26,7 @@ import { ModeToggle } from "@/components/mode-toggle";
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "/perfil";
+  const next = searchParams.get("next") ?? "/profile";
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     register,

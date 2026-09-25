@@ -1,6 +1,6 @@
 import { ResultsView } from "./results-view";
 
-export default async function BuscarPage(props: PageProps<"/buscar">) {
+export default async function BuscarPage(props: PageProps<"/search">) {
   const searchParams = await props.searchParams;
   const query = typeof searchParams.q === "string" ? searchParams.q : "";
   const category =

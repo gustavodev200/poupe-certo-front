@@ -78,7 +78,7 @@ export function ResultsView({
         {results.map(({ product, offer }) => (
           <Link
             key={product.ean}
-            href={`/produto/${product.ean}`}
+            href={`/product/${product.ean}`}
             className="flex flex-wrap items-center gap-3.5 rounded-xl border border-border p-3.5 shadow-xs"
           >
             <div className="size-18 shrink-0 rounded-lg bg-muted" />

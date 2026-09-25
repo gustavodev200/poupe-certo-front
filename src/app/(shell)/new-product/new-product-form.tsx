@@ -25,7 +25,7 @@ import {
 
 export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
   const router = useRouter();
-  const { isReady } = useRequireAuth(`/novo-produto?ean=${ean}`);
+  const { isReady } = useRequireAuth(`/new-product?ean=${ean}`);
   const {
     register,
     control,

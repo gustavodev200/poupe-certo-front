@@ -23,7 +23,7 @@ const CONTRIBUTIONS = [
 ];
 
 export default function ProfilePage() {
-  const { session, isReady } = useRequireAuth("/perfil");
+  const { session, isReady } = useRequireAuth("/profile");
   const { uf, city } = useLocationStore();
 
   if (!isReady || !session) {

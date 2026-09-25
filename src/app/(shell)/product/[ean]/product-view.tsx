@@ -37,7 +37,7 @@ export function ProductView({ product }: Readonly<{ product: Product }>) {
           Início
         </Link>{" "}
         ›{" "}
-        <Link href="/buscar" className="underline underline-offset-4">
+        <Link href="/search" className="underline underline-offset-4">
           {categoryLabel}
         </Link>
       </p>
@@ -133,7 +133,7 @@ export function ProductView({ product }: Readonly<{ product: Product }>) {
             Adicionar à lista
           </Button>
           <Button asChild variant="outline" className="flex-1 gap-1.5">
-            <Link href="/escanear">
+            <Link href="/scan">
               <ScanBarcode className="size-4 opacity-65" />
               Escanear outro preço
             </Link>
@@ -244,7 +244,7 @@ export function ProductView({ product }: Readonly<{ product: Product }>) {
               Sim, está correto
             </Button>
             <Button asChild variant="outline" className="justify-center gap-2">
-              <Link href="/escanear">
+              <Link href="/scan">
                 <ThumbsDown className="size-4 opacity-65" />
                 Não, mudou
               </Link>
