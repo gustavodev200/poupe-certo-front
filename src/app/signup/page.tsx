@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/card";
 import { signUp } from "@/lib/auth-client";
 import { signupSchema, type SignupInput } from "@/lib/validations/auth";
+import { Logo } from "@/components/logo";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -51,7 +52,8 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center p-4">
+    <main className="flex flex-1 flex-col items-center justify-center gap-8 p-4">
+      <Logo />
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Criar conta</CardTitle>

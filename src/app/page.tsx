@@ -1,13 +1,14 @@
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/logo";
 
 export default function Home() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-6 p-6 text-center">
-      <h1 className="text-3xl font-medium">Poupe Certo</h1>
+      <Logo size="md" />
       <p className="max-w-md text-muted-foreground">
-        Controle financeiro pessoal, do jeito certo.
+        Compare preços de mercado com quem compra perto de você.
       </p>
       <div className="flex gap-3">
         <Button asChild>
