@@ -13,6 +13,15 @@ test.beforeEach(() => resetMockRoutes());
 test("escanear (digitar EAN) → cadastrar produto novo (US2)", async ({ page }) => {
   await mockAuthSession(page);
   await mockLocation(page);
+  mockJson("GET", /^\/users\/me$/, {
+    id: "00000000-0000-4000-8000-000000000000",
+    email: "e2e@poupecerto.test",
+    displayName: "E2E Test",
+    avatarUrl: null,
+    city: "Goianésia",
+    uf: "GO",
+    createdAt: new Date().toISOString(),
+  });
   mockJson("GET", new RegExp(`^/products/ean/${NEW_EAN}/exists$`), {
     exists: false,
     approved: false,

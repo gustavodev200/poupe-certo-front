@@ -10,6 +10,15 @@ test.beforeEach(() => resetMockRoutes());
 test("abrir perfil autenticado → ver estatísticas reais (US3)", async ({ page }) => {
   await mockAuthSession(page);
   await mockLocation(page);
+  mockJson("GET", /^\/users\/me$/, {
+    id: "00000000-0000-4000-8000-000000000000",
+    email: "e2e@poupecerto.test",
+    displayName: "E2E Test",
+    avatarUrl: null,
+    city: "Goianésia",
+    uf: "GO",
+    createdAt: new Date().toISOString(),
+  });
   mockJson("GET", /^\/users\/me\/stats$/, {
     pricesReported: 87,
     productsCreated: 32,

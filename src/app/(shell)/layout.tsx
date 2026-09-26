@@ -8,17 +8,22 @@ import { SiteFooter } from "@/components/site-footer";
 import { MobileActionBar } from "@/components/mobile-action-bar";
 import { useLocationHydrated, useLocationStore } from "@/stores/location-store";
 import { useMyProfile } from "@/hooks/use-profile-location";
+import { useSession } from "@/hooks/use-session";
 
 export default function ShellLayout({ children }: LayoutProps<"/">) {
   const router = useRouter();
   const city = useLocationStore((s) => s.city);
   const hasHydrated = useLocationHydrated();
+  const { session, isPending: sessionPending } = useSession();
   const profile = useMyProfile();
 
-  const ready = hasHydrated && (profile.isSuccess || profile.isError);
-  // Backend é a fonte de verdade (pode corrigir um `city` antigo salvo só no
-  // localStorage, de antes da localização passar a ser persistida no perfil).
-  const hasCity = profile.isSuccess ? !!profile.data.city : !!city;
+  // Anônimo nunca chama /users/me (ver useMyProfile) — a query fica
+  // desabilitada e nunca resolve isSuccess/isError, então só espera a
+  // sessão carregar. Logado: espera o perfil (fonte de verdade pra `city`,
+  // pode corrigir um valor antigo salvo só no localStorage).
+  const profileSettled = profile.isSuccess || profile.isError;
+  const ready = hasHydrated && !sessionPending && (!session || profileSettled);
+  const hasCity = session && profile.isSuccess ? !!profile.data.city : !!city;
 
   useEffect(() => {
     if (ready && !hasCity) {
