@@ -14,18 +14,16 @@ import {
   Milk,
   Croissant,
   LayoutGrid,
-  Users,
-  Zap,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ModeToggle } from "@/components/mode-toggle";
-import { useSession } from "@/lib/auth-client";
+import { useSession } from "@/hooks/use-session";
+import { getDisplayUser } from "@/lib/auth";
 import { useLocationStore } from "@/stores/location-store";
-import { CATEGORIES } from "@/lib/mock/catalog";
-import { PLATFORM_STATS } from "@/lib/mock/community";
+import { CATEGORIES } from "@/lib/categories";
 
 const CATEGORY_ICONS = {
   ShoppingBasket,
@@ -38,7 +36,7 @@ const CATEGORY_ICONS = {
 
 export function SiteHeader() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { session } = useSession();
   const { uf, city } = useLocationStore();
   const [query, setQuery] = useState("");
 
@@ -49,30 +47,10 @@ export function SiteHeader() {
   }
 
   const cityLabel = city ? `${city}, ${uf}` : "Escolher cidade";
-  const initials = session?.user.name
-    ? session.user.name.slice(0, 2).toUpperCase()
-    : "?";
+  const user = session ? getDisplayUser(session) : null;
 
   return (
     <div className="sticky top-0 z-40 border-b border-border bg-background">
-      <div className="hidden bg-primary py-2 text-xs text-primary-foreground/70 md:block">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6">
-          <div className="flex items-center gap-5">
-            <span className="flex items-center gap-1.5">
-              <Zap className="size-3.5 text-trust-fresh" />
-              {PLATFORM_STATS.totalPrices} preços informados pela comunidade
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Users className="size-3.5 opacity-60" />
-              {PLATFORM_STATS.totalContributors} pessoas contribuindo
-            </span>
-          </div>
-          <Link href="#" className="text-primary-foreground/70 no-underline">
-            Como funciona
-          </Link>
-        </div>
-      </div>
-
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3 md:px-6">
         <Link href="/" className="flex shrink-0 items-center gap-2">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -99,7 +77,10 @@ export function SiteHeader() {
           <ModeToggle />
           <Link href="/profile">
             <Avatar>
-              <AvatarFallback>{initials}</AvatarFallback>
+              {user?.avatarUrl && (
+                <AvatarImage src={user.avatarUrl} alt={user.name} />
+              )}
+              <AvatarFallback>{user?.initials ?? "?"}</AvatarFallback>
             </Avatar>
           </Link>
         </div>

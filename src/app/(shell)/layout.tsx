@@ -24,9 +24,11 @@ export default function ShellLayout({ children }: LayoutProps<"/">) {
   }
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex min-w-0 flex-1 flex-col">
       <SiteHeader />
-      <main className="flex flex-1 flex-col pb-20 md:pb-0">{children}</main>
+      <main className="flex min-w-0 flex-1 flex-col pb-20 md:pb-0">
+        <div className="min-w-0">{children}</div>
+      </main>
       <SiteFooter />
       <MobileActionBar />
     </div>

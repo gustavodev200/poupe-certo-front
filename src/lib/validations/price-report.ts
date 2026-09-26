@@ -1,7 +1,9 @@
 import { z } from "zod";
 
+import { CATEGORY_CODES } from "@/lib/categories";
+
 export const priceReportSchema = z.object({
-  market: z.string().min(1, "Escolha um mercado"),
+  marketId: z.string().min(1, "Escolha um mercado"),
   price: z
     .string()
     .min(1, "Informe o preço")
@@ -14,7 +16,16 @@ export const newProductSchema = z.object({
   name: z.string().min(2, "Nome deve ter no mínimo 2 caracteres"),
   brand: z.string().min(2, "Marca deve ter no mínimo 2 caracteres"),
   qty: z.string().min(1, "Informe a quantidade"),
-  category: z.string().min(1, "Escolha uma categoria"),
+  category: z.enum(CATEGORY_CODES, { error: "Escolha uma categoria" }),
 });
 
 export type NewProductInput = z.infer<typeof newProductSchema>;
+
+export const createMarketSchema = z.object({
+  name: z.string().min(2, "Nome deve ter no mínimo 2 caracteres"),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  uf: z.string().optional(),
+});
+
+export type CreateMarketInput = z.infer<typeof createMarketSchema>;

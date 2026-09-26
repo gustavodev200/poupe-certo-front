@@ -1,8 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AxiosError } from "axios";
 import { Info } from "lucide-react";
 import { toast } from "sonner";
 
@@ -17,7 +19,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useRequireAuth } from "@/hooks/use-require-auth";
-import { CATEGORIES } from "@/lib/mock/catalog";
+import { useCreateProduct } from "@/hooks/use-create-product";
+import { mapApiError } from "@/lib/api/errors";
+import { CATEGORIES } from "@/lib/categories";
 import {
   newProductSchema,
   type NewProductInput,
@@ -26,21 +30,42 @@ import {
 export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
   const router = useRouter();
   const { isReady } = useRequireAuth(`/new-product?ean=${ean}`);
+  const createProduct = useCreateProduct();
   const {
     register,
     control,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<NewProductInput>({
     resolver: zodResolver(newProductSchema),
-    defaultValues: { name: "", brand: "", qty: "", category: "" },
+    defaultValues: { name: "", brand: "", qty: "", category: undefined },
   });
 
   if (!isReady) return null;
 
-  function onSubmit() {
-    router.push("/");
-    toast.success("Produto enviado para aprovação");
+  function onSubmit(values: NewProductInput) {
+    createProduct.mutate(
+      { ean, ...values },
+      {
+        onSuccess: (result) => {
+          toast.success(
+            `Produto enviado para aprovação · +${result.pointsAwarded} pontos`
+          );
+          router.push("/");
+        },
+        onError: (error) => {
+          if (error instanceof AxiosError && error.response?.status === 409) {
+            setError("name", {
+              message: "Esse EAN já foi cadastrado por outra pessoa.",
+            });
+            toast.error("Produto já cadastrado — confira o preço dele.");
+            return;
+          }
+          toast.error(mapApiError(error));
+        },
+      }
+    );
   }
 
   return (
@@ -96,7 +121,7 @@ export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
             control={control}
             name="category"
             render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select value={field.value ?? ""} onValueChange={field.onChange}>
                 <SelectTrigger id="category" className="w-full">
                   <SelectValue placeholder="Escolha uma categoria" />
                 </SelectTrigger>
@@ -119,9 +144,26 @@ export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
         <div className="rounded-lg border border-dashed border-border p-5 text-center text-sm text-muted-foreground">
           Toque para usar a câmera (opcional)
         </div>
-        <Button type="submit" size="lg" className="mt-1">
-          Enviar para aprovação · +5 pontos
+        {createProduct.isError &&
+          !(
+            createProduct.error instanceof AxiosError &&
+            createProduct.error.response?.status === 409
+          ) && (
+            <p className="text-sm text-destructive">
+              {mapApiError(createProduct.error)}
+            </p>
+          )}
+        <Button type="submit" size="lg" className="mt-1" disabled={createProduct.isPending}>
+          {createProduct.isPending
+            ? "Enviando..."
+            : "Enviar para aprovação · +5 pontos"}
         </Button>
+        <Link
+          href={`/confirm-price?ean=${ean}`}
+          className="text-center text-sm text-muted-foreground underline underline-offset-4"
+        >
+          Na verdade já existe — confirmar preço
+        </Link>
       </form>
     </div>
   );

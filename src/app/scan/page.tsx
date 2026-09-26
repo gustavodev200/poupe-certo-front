@@ -7,7 +7,7 @@ import { ArrowLeft, ScanBarcode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRequireAuth } from "@/hooks/use-require-auth";
-import { getProductByEan } from "@/lib/mock/catalog";
+import { checkEanExists } from "@/lib/api/products";
 import { cn } from "@/lib/utils";
 
 type ScanState =
@@ -15,6 +15,8 @@ type ScanState =
   | "starting"
   | "scanning"
   | "found"
+  | "checking"
+  | "error"
   | "denied"
   | "unsupported";
 
@@ -23,6 +25,8 @@ const MESSAGES: Record<ScanState, string> = {
   starting: "Iniciando a câmera...",
   scanning: "Aponte a câmera para o código de barras do produto.",
   found: "Código lido com sucesso.",
+  checking: "Verificando produto...",
+  error: "Não foi possível verificar o produto. Tente de novo.",
   denied:
     "Precisamos da câmera para ler o código. Você também pode digitar o EAN abaixo.",
   unsupported:
@@ -34,6 +38,8 @@ const FRAME_COLOR: Record<ScanState, string> = {
   starting: "rgba(255,255,255,0.35)",
   scanning: "rgba(255,255,255,0.9)",
   found: "var(--trust-fresh)",
+  checking: "var(--trust-fresh)",
+  error: "var(--destructive)",
   denied: "var(--destructive)",
   unsupported: "var(--destructive)",
 };
@@ -50,9 +56,15 @@ export default function EscanearPage() {
   const [scanState, setScanState] = useState<ScanState>("idle");
   const [eanInput, setEanInput] = useState("");
 
-  function goToResult(ean: string) {
-    const known = getProductByEan(ean);
-    router.push(known ? `/confirm-price?ean=${ean}` : `/new-product?ean=${ean}`);
+  async function goToResult(ean: string) {
+    setScanState("checking");
+    try {
+      const result = await checkEanExists(ean);
+      const known = result.exists && result.approved;
+      router.push(known ? `/confirm-price?ean=${ean}` : `/new-product?ean=${ean}`);
+    } catch {
+      setScanState("error");
+    }
   }
 
   function stopCamera() {
@@ -64,7 +76,7 @@ export default function EscanearPage() {
     setScanState("found");
     timerRef.current = setTimeout(() => {
       stopCamera();
-      goToResult(ean);
+      void goToResult(ean);
     }, 600);
   }
 
@@ -169,6 +181,11 @@ export default function EscanearPage() {
             Permitir câmera
           </Button>
         )}
+        {scanState === "error" && (
+          <Button variant="secondary" onClick={startCamera}>
+            Tentar de novo
+          </Button>
+        )}
       </div>
 
       <div className="flex justify-center p-5 pb-7">
@@ -181,7 +198,7 @@ export default function EscanearPage() {
             placeholder="Digitar EAN manualmente"
             inputMode="numeric"
             className={cn(
-              "h-full flex-1 border-none bg-transparent px-0 text-primary-foreground shadow-none placeholder:text-primary-foreground/50 focus-visible:ring-0"
+              "h-full min-w-0 flex-1 border-none bg-transparent px-0 text-primary-foreground shadow-none placeholder:text-primary-foreground/50 focus-visible:ring-0"
             )}
           />
           <Button size="sm" variant="secondary" onClick={submitEan}>

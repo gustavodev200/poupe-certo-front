@@ -3,11 +3,11 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-import { useSession } from "@/lib/auth-client";
+import { useSession } from "@/hooks/use-session";
 
 export function useRequireAuth(next: string) {
   const router = useRouter();
-  const { data: session, isPending } = useSession();
+  const { session, isPending } = useSession();
 
   useEffect(() => {
     if (!isPending && !session) {

@@ -48,9 +48,6 @@ export function SiteFooter() {
           <Link href="/login" className="no-underline">
             Entrar
           </Link>
-          <Link href="/signup" className="no-underline">
-            Criar conta
-          </Link>
         </div>
       </div>
     </footer>

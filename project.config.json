@@ -6,9 +6,9 @@
   "frontend": "nextjs",
   "backend": "nestjs",
   "database": null,
-  "auth": "better-auth",
+  "auth": "supabase-auth",
   "email": null,
   "storage": null,
 
-  "notes": "Frontend puro — backend (Nest.js + Prisma + PostgreSQL) fica em repositório separado, ainda não criado. Este repo não tem Prisma nem acesso a banco: consome a API do backend via axios/react-query (NEXT_PUBLIC_API_URL). Better Auth roda no backend; aqui só existe o client (src/lib/auth-client.ts) apontando pra essa mesma URL. Ajustar 'backend' se a stack do outro repo mudar."
+  "notes": "Frontend puro — backend (Nest.js + Prisma sobre o Postgres do Supabase) vive em poupe-certo-back. Desvio pontual documentado: auth é 'supabase-auth' (login só com Google via Supabase Auth, projeto 'poupe-certo', ref mcuipdmthhpfbjneuspw), não Better Auth. Aqui só existe o client supabase-js no browser (src/lib/supabase.ts, PKCE); o access_token vai como Bearer pro Nest (NEXT_PUBLIC_API_URL), que valida via JWKS. Este repo não acessa banco nem tabelas Supabase diretamente."
 }

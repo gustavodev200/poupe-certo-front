@@ -5,20 +5,40 @@ import { BadgeCheck, ScanBarcode, Store, Sparkles, Trophy, TrendingDown } from "
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { getFeaturedProducts, lowestOffer, MARKETS } from "@/lib/mock/catalog";
-import { TOP_CONTRIBUTORS, TRENDING_SEARCHES } from "@/lib/mock/community";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { QueryError } from "@/components/query-error";
+import { TRENDING_SEARCHES } from "@/lib/mock/community";
 import { useLocationStore } from "@/stores/location-store";
 import { trustColorVar, trustLevel } from "@/lib/trust";
+import { useSearchProducts } from "@/hooks/use-products";
+import { useLeaderboard } from "@/hooks/use-leaderboard";
+import { useMarkets } from "@/hooks/use-markets";
+
+function formatPrice(price: number): string {
+  return price.toFixed(2).replace(".", ",");
+}
+
+function initialsOf(name: string | null): string {
+  if (!name) return "??";
+  return name.slice(0, 2).toUpperCase();
+}
+
+function marketLocation(m: { address: string | null; city: string | null; uf: string | null }): string | null {
+  if (m.city) return m.uf ? `${m.city}, ${m.uf}` : m.city;
+  return m.address;
+}
 
 export default function HomePage() {
   const city = useLocationStore((s) => s.city);
   const cityShort = city ?? "sua cidade";
-  const featured = getFeaturedProducts();
+
+  const featured = useSearchProducts({ sort: "recente", pageSize: 8 });
+  const leaderboard = useLeaderboard(3);
+  const markets = useMarkets();
 
   return (
     <>
-      <section className="bg-primary text-primary-foreground">
+      <section className="bg-linear-135 from-gradient-hero-from to-gradient-hero-to text-primary-foreground">
         <div className="mx-auto grid max-w-6xl gap-8 px-6 py-11 md:grid-cols-2 md:items-center">
           <div>
             <div className="mb-4.5 inline-flex items-center gap-1.5 rounded-lg border border-primary-foreground/20 px-2.5 py-1 text-xs font-medium">
@@ -50,7 +70,7 @@ export default function HomePage() {
             </div>
             <div className="mt-4.5 flex flex-wrap items-center gap-1.5">
               <span className="text-xs text-primary-foreground/50">
-                Buscas do momento:
+                Sugestões de busca:
               </span>
               {TRENDING_SEARCHES.map((t) => (
                 <Link
@@ -69,54 +89,74 @@ export default function HomePage() {
               <div className="mb-1 flex items-center gap-2">
                 <Trophy className="size-4 text-reward" />
                 <div className="text-[15px] font-semibold">
-                  Top contribuidores do mês
+                  Top contribuidores
                 </div>
               </div>
               <div className="mb-4 text-xs text-muted-foreground">
-                Quem mais informou preços com alta confiança em {cityShort}.
+                Quem mais informou preços com alta confiança.
               </div>
-              <div className="flex flex-col gap-2.5">
-                {TOP_CONTRIBUTORS.map((c, i) => (
-                  <div
-                    key={c.name}
-                    className={
-                      "flex items-center gap-3 rounded-lg border border-border p-2.5" +
-                      (i === 0 ? " bg-muted" : "")
-                    }
-                  >
+              {leaderboard.isPending && (
+                <div className="flex flex-col gap-2.5">
+                  {Array.from({ length: 3 }).map((_, i) => (
                     <div
+                      key={i}
+                      className="h-14 animate-pulse rounded-lg bg-muted/60"
+                    />
+                  ))}
+                </div>
+              )}
+              {leaderboard.isError && (
+                <p className="text-sm text-muted-foreground">
+                  Não foi possível carregar o ranking agora.
+                </p>
+              )}
+              {leaderboard.data && (
+                <div className="flex flex-col gap-2.5">
+                  {leaderboard.data.map((c, i) => (
+                    <div
+                      key={`${c.displayName}-${i}`}
                       className={
-                        "flex size-6.5 shrink-0 items-center justify-center rounded-full text-xs font-semibold" +
-                        (i === 0
-                          ? " bg-primary text-primary-foreground"
-                          : " bg-muted text-foreground")
+                        "flex items-center gap-3 rounded-lg border border-border p-2.5" +
+                        (i === 0 ? " bg-muted" : "")
                       }
                     >
-                      {i + 1}
+                      <div
+                        className={
+                          "flex size-6.5 shrink-0 items-center justify-center rounded-full text-xs font-semibold" +
+                          (i === 0
+                            ? " bg-primary text-primary-foreground"
+                            : " bg-muted text-foreground")
+                        }
+                      >
+                        {i + 1}
+                      </div>
+                      <Avatar>
+                        {c.avatarUrl && <AvatarImage src={c.avatarUrl} alt="" />}
+                        <AvatarFallback>{initialsOf(c.displayName)}</AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-medium">
+                          {c.displayName ?? "Anônimo"}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {c.pricesReported} preços · nível {c.level}
+                        </div>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <div className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2 py-0.5 text-xs font-medium">
+                          <span className="size-1.5 rounded-full bg-trust-fresh" />
+                          {c.points} pts
+                        </div>
+                      </div>
                     </div>
-                    <Avatar>
-                      <AvatarFallback>{c.initials}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium">
-                        {c.name}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {c.prices} preços · nível {c.level}
-                      </div>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <div className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2 py-0.5 text-xs font-medium">
-                        <span className="size-1.5 rounded-full bg-trust-fresh" />
-                        {c.confidence}
-                      </div>
-                      <div className="mt-0.5 text-[11px] text-muted-foreground">
-                        confiança
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                  {leaderboard.data.length === 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      Ninguém no ranking ainda — seja o primeiro.
+                    </p>
+                  )}
+                </div>
+              )}
               <Link
                 href="/profile"
                 className="mt-3.5 inline-block text-sm font-medium underline underline-offset-4"
@@ -132,10 +172,10 @@ export default function HomePage() {
         <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold tracking-tight md:text-2xl">
-              Menores preços perto de você
+              Produtos com preço recente
             </h2>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              {MARKETS.length} mercados comparados em {cityShort}
+              Comparando preços em {cityShort}
             </p>
           </div>
           <Link
@@ -145,10 +185,27 @@ export default function HomePage() {
             Ver todos
           </Link>
         </div>
-        <div className="mb-11 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {featured.map((p) => {
-            const offer = lowestOffer(p);
-            return (
+
+        {featured.isPending && (
+          <div className="mb-11 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-40 animate-pulse rounded-xl border border-border bg-muted/40"
+              />
+            ))}
+          </div>
+        )}
+
+        {featured.isError && (
+          <div className="mb-11">
+            <QueryError error={undefined} onRetry={() => featured.refetch()} />
+          </div>
+        )}
+
+        {featured.data && (
+          <div className="mb-11 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {featured.data.items.map((p) => (
               <Link
                 key={p.ean}
                 href={`/product/${p.ean}`}
@@ -161,26 +218,39 @@ export default function HomePage() {
                 <div className="mb-2.5 text-xs text-muted-foreground">
                   {p.qty}
                 </div>
-                <div className="text-xl font-semibold tracking-tight tabular-nums">
-                  R$ {offer.price.toFixed(2).replace(".", ",")}
-                </div>
-                <div className="mt-2.5 flex items-center gap-1.5 border-t border-border pt-2.5">
-                  <span
-                    className="size-1.5 shrink-0 rounded-full"
-                    style={{
-                      backgroundColor: trustColorVar(
-                        trustLevel(offer.reportedAt)
-                      ),
-                    }}
-                  />
-                  <span className="truncate text-[11px] text-muted-foreground">
-                    {offer.market}
-                  </span>
-                </div>
+                {p.lowestOffer ? (
+                  <>
+                    <div className="text-xl font-semibold tracking-tight tabular-nums">
+                      R$ {formatPrice(p.lowestOffer.price)}
+                    </div>
+                    <div className="mt-2.5 flex items-center gap-1.5 border-t border-border pt-2.5">
+                      <span
+                        className="size-1.5 shrink-0 rounded-full"
+                        style={{
+                          backgroundColor: trustColorVar(
+                            trustLevel(p.lowestOffer.reportedAt)
+                          ),
+                        }}
+                      />
+                      <span className="truncate text-[11px] text-muted-foreground">
+                        {p.lowestOffer.market.name}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="mt-2.5 border-t border-border pt-2.5 text-[11px] text-muted-foreground">
+                    sem preço ainda
+                  </div>
+                )}
               </Link>
-            );
-          })}
-        </div>
+            ))}
+            {featured.data.items.length === 0 && (
+              <p className="col-span-full py-10 text-center text-sm text-muted-foreground">
+                Ainda não há produtos cadastrados. Escaneie o primeiro!
+              </p>
+            )}
+          </div>
+        )}
       </section>
 
       <section className="border-y border-border bg-muted/40">
@@ -219,13 +289,23 @@ export default function HomePage() {
 
       <section className="mx-auto grid max-w-6xl gap-4 px-6 py-9 sm:grid-cols-2">
         <div>
-          <h2 className="mb-3 text-lg font-semibold">
-            Mercados em {cityShort}
-          </h2>
+          <h2 className="mb-3 text-lg font-semibold">Mercados cadastrados</h2>
           <div className="flex flex-col gap-2">
-            {MARKETS.map((m) => (
+            {markets.isPending &&
+              Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-16 animate-pulse rounded-lg bg-muted/40"
+                />
+              ))}
+            {markets.isError && (
+              <p className="text-sm text-muted-foreground">
+                Não foi possível carregar os mercados agora.
+              </p>
+            )}
+            {markets.data?.slice(0, 4).map((m) => (
               <div
-                key={m.name}
+                key={m.id}
                 className="flex items-center gap-3 rounded-lg border border-border p-3.5"
               >
                 <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
@@ -233,12 +313,19 @@ export default function HomePage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium">{m.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {m.distance} · {m.count} preços
-                  </div>
+                  {marketLocation(m) && (
+                    <div className="text-xs text-muted-foreground">
+                      {marketLocation(m)}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
+            {markets.data?.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Nenhum mercado cadastrado ainda.
+              </p>
+            )}
           </div>
         </div>
         <div className="flex flex-col justify-center rounded-xl bg-primary p-7 text-primary-foreground">

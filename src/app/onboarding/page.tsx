@@ -23,7 +23,7 @@ export default function OnboardingPage() {
   const cityList = useMemo(() => {
     const q = cityQuery.trim().toLowerCase();
     return (CITIES[uf] ?? []).filter(
-      ([name]) => !q || name.toLowerCase().includes(q)
+      (name) => !q || name.toLowerCase().includes(q)
     );
   }, [uf, cityQuery]);
 
@@ -91,7 +91,7 @@ export default function OnboardingPage() {
         </div>
 
         <div className="mb-5 overflow-hidden rounded-lg border border-border">
-          {cityList.map(([name, meta]) => (
+          {cityList.map((name) => (
             <button
               key={name}
               type="button"
@@ -101,10 +101,7 @@ export default function OnboardingPage() {
                 city === name && "bg-muted"
               )}
             >
-              <div>
-                <div className="text-sm font-medium">{name}</div>
-                <div className="text-xs text-muted-foreground">{meta}</div>
-              </div>
+              <div className="text-sm font-medium">{name}</div>
               {city === name && <Check className="size-4 opacity-75" />}
             </button>
           ))}

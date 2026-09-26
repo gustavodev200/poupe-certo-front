@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -14,30 +17,82 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useRequireAuth } from "@/hooks/use-require-auth";
+import { useMarkets, useCreateMarket } from "@/hooks/use-markets";
+import { useCreatePriceReport } from "@/hooks/use-price-reports";
+import { mapApiError } from "@/lib/api/errors";
 import {
+  createMarketSchema,
   priceReportSchema,
+  type CreateMarketInput,
   type PriceReportInput,
 } from "@/lib/validations/price-report";
-import type { Product } from "@/lib/mock/catalog";
+import type { ProductDetail } from "@/lib/api/products";
 
-export function ConfirmPriceForm({ product }: Readonly<{ product: Product }>) {
+export function ConfirmPriceForm({ product }: Readonly<{ product: ProductDetail }>) {
   const router = useRouter();
   const { isReady } = useRequireAuth(`/confirm-price?ean=${product.ean}`);
+  const [showNewMarket, setShowNewMarket] = useState(false);
+
+  const markets = useMarkets();
+  const createMarket = useCreateMarket();
+  const createPriceReport = useCreatePriceReport(product.ean);
+
   const {
     register,
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<PriceReportInput>({
     resolver: zodResolver(priceReportSchema),
-    defaultValues: { market: product.offers[0]?.market ?? "", price: "" },
+    defaultValues: { marketId: "", price: "" },
+  });
+
+  const {
+    register: registerMarket,
+    handleSubmit: handleSubmitMarket,
+    reset: resetMarketForm,
+    formState: { errors: marketErrors },
+  } = useForm<CreateMarketInput>({
+    resolver: zodResolver(createMarketSchema),
+    defaultValues: { name: "" },
   });
 
   if (!isReady) return null;
 
-  function onSubmit() {
-    router.push("/");
-    toast.success("Preço registrado · +2 pontos");
+  function onSubmit(values: PriceReportInput) {
+    createPriceReport.mutate(
+      {
+        marketId: values.marketId,
+        price: Number(values.price.replace(",", ".")),
+      },
+      {
+        onSuccess: (result) => {
+          if (result.status === "PENDING_REVIEW") {
+            toast.info(
+              result.message ??
+                "Preço fora do padrão — enviado para revisão."
+            );
+          } else {
+            toast.success(`Preço registrado · +${result.pointsAwarded} pontos`);
+          }
+          router.push(`/product/${product.ean}`);
+        },
+        onError: (error) => toast.error(mapApiError(error)),
+      }
+    );
+  }
+
+  function onCreateMarket(values: CreateMarketInput) {
+    createMarket.mutate(values, {
+      onSuccess: (market) => {
+        setValue("marketId", market.id);
+        setShowNewMarket(false);
+        resetMarketForm();
+        toast.success("Mercado cadastrado");
+      },
+      onError: (error) => toast.error(mapApiError(error)),
+    });
   }
 
   return (
@@ -58,31 +113,62 @@ export function ConfirmPriceForm({ product }: Readonly<{ product: Product }>) {
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <div>
-          <label htmlFor="market" className="mb-2 block text-sm font-medium">
+          <label htmlFor="marketId" className="mb-2 block text-sm font-medium">
             Em qual mercado?
           </label>
           <Controller
             control={control}
-            name="market"
+            name="marketId"
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger id="market" className="w-full">
+                <SelectTrigger id="marketId" className="w-full">
                   <SelectValue placeholder="Escolha o mercado" />
                 </SelectTrigger>
                 <SelectContent>
-                  {product.offers.map((o) => (
-                    <SelectItem key={o.market} value={o.market}>
-                      {o.market}
+                  {markets.data?.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             )}
           />
-          {errors.market && (
+          {errors.marketId && (
             <p className="mt-1.5 text-sm text-destructive">
-              {errors.market.message}
+              {errors.marketId.message}
             </p>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowNewMarket((v) => !v)}
+            className="mt-2 inline-flex items-center gap-1 text-sm font-medium underline underline-offset-4"
+          >
+            <Plus className="size-3.5" />
+            Cadastrar novo mercado
+          </button>
+
+          {showNewMarket && (
+            <div className="mt-3 flex flex-col gap-2 rounded-lg border border-dashed border-border p-3.5">
+              <Input
+                placeholder="Nome do mercado"
+                {...registerMarket("name")}
+              />
+              {marketErrors.name && (
+                <p className="text-sm text-destructive">
+                  {marketErrors.name.message}
+                </p>
+              )}
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                disabled={createMarket.isPending}
+                onClick={handleSubmitMarket(onCreateMarket)}
+              >
+                Salvar mercado
+              </Button>
+            </div>
           )}
         </div>
 
@@ -99,7 +185,7 @@ export function ConfirmPriceForm({ product }: Readonly<{ product: Product }>) {
               {...register("price")}
               placeholder="00,00"
               inputMode="decimal"
-              className="flex-1 border-none bg-transparent text-3xl font-semibold tracking-tight tabular-nums outline-none"
+              className="min-w-0 flex-1 border-none bg-transparent text-3xl font-semibold tracking-tight tabular-nums outline-none"
             />
           </div>
           {errors.price && (
@@ -112,8 +198,10 @@ export function ConfirmPriceForm({ product }: Readonly<{ product: Product }>) {
           </p>
         </div>
 
-        <Button type="submit" size="lg" className="mt-1">
-          Registrar preço · +2 pontos
+        <Button type="submit" size="lg" className="mt-1" disabled={createPriceReport.isPending}>
+          {createPriceReport.isPending
+            ? "Enviando..."
+            : "Registrar preço · +2 pontos"}
         </Button>
       </form>
     </div>

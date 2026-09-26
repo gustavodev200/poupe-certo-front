@@ -43,6 +43,8 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-gradient-hero-from: var(--gradient-hero-from);
+  --color-gradient-hero-to: var(--gradient-hero-to);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -80,6 +82,8 @@
   --trust-warning: var(--chart-4);
   --trust-stale: var(--chart-5);
   --reward: var(--chart-1);
+  --gradient-hero-from: oklch(0.219 0.09 261.773);
+  --gradient-hero-to: oklch(0.517 0.12 240.777);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.141 0.005 285.823);

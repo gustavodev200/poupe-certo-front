@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
+import { AxiosError } from "axios";
 
-import { getProductByEan } from "@/lib/mock/catalog";
+import { getProductDetail } from "@/lib/api/products";
 import { ConfirmPriceForm } from "./confirm-price-form";
 
 export default async function ConfirmarPrecoPage(
@@ -8,10 +9,19 @@ export default async function ConfirmarPrecoPage(
 ) {
   const searchParams = await props.searchParams;
   const ean = typeof searchParams.ean === "string" ? searchParams.ean : "";
-  const product = getProductByEan(ean);
 
-  if (!product) {
+  if (!ean) {
     notFound();
+  }
+
+  let product;
+  try {
+    product = await getProductDetail(ean);
+  } catch (error) {
+    if (error instanceof AxiosError && error.response?.status === 404) {
+      notFound();
+    }
+    throw error;
   }
 
   return <ConfirmPriceForm product={product} />;
