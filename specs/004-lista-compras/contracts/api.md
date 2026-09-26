@@ -7,7 +7,7 @@ versão pública/anônima de lista. Erros seguem `{ statusCode, message }`
 
 ---
 
-## `GET /me/list`
+## `GET /users/me/list`
 
 Lista todos os itens da conta autenticada, pendentes primeiro (mais
 recentes primeiro dentro de cada grupo).
@@ -28,7 +28,7 @@ recentes primeiro dentro de cada grupo).
 
 Lista vazia → `[]` (nunca 404 — conta sem itens é um estado normal).
 
-## `POST /me/list`
+## `POST /users/me/list`
 
 Adiciona um produto à lista, capturando a oferta vigente (menor preço entre
 os reportes `ACTIVE` do produto) como snapshot. Idempotente por produto: se
@@ -41,7 +41,7 @@ snapshot (ver research.md#2).
 ```
 
 **Response 201** (item novo) ou **200** (já existia): mesmo formato de item
-de `GET /me/list`.
+de `GET /users/me/list`.
 
 **Response 404**: produto inexistente/não aprovado, ou sem nenhuma oferta
 `ACTIVE` no momento (nada pra "capturar" como snapshot).
@@ -49,7 +49,7 @@ de `GET /me/list`.
 { "statusCode": 404, "message": "Produto sem oferta ativa para adicionar à lista" }
 ```
 
-## `PATCH /me/list/:id`
+## `PATCH /users/me/list/:id`
 
 Marca ou desmarca um item como comprado. Não remove o item.
 
@@ -58,7 +58,7 @@ Marca ou desmarca um item como comprado. Não remove o item.
 { "purchased": true }
 ```
 
-**Response 200**: item atualizado (mesmo formato de `GET /me/list`).
+**Response 200**: item atualizado (mesmo formato de `GET /users/me/list`).
 
 **Response 404**: item não existe **ou** não pertence à conta autenticada —
 mesma resposta para os dois casos (não vaza se o id existe na conta de
@@ -67,7 +67,7 @@ outra pessoa).
 { "statusCode": 404, "message": "Item não encontrado" }
 ```
 
-## `DELETE /me/list/:id`
+## `DELETE /users/me/list/:id`
 
 Remove definitivamente um item da lista.
 

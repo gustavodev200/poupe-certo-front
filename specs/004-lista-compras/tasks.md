@@ -27,7 +27,7 @@ repo (`poupe-certo-front`).
 
 ## Phase 1: Setup
 
-- [ ] T001 Confirmar `poupe-certo-back` rodando localmente (`npm run start:dev`) e `poupe-certo-front` com `NEXT_PUBLIC_API_URL` apontando pra ele — nenhuma dependência nova a instalar em nenhum dos dois repos (reaproveita zod/react-query/prisma já presentes)
+- [X] T001 Confirmar `poupe-certo-back` rodando localmente (`npm run start:dev`) e `poupe-certo-front` com `NEXT_PUBLIC_API_URL` apontando pra ele — nenhuma dependência nova a instalar em nenhum dos dois repos (reaproveita zod/react-query/prisma já presentes)
 
 **Checkpoint**: ambiente pronto, nenhum código alterado ainda.
 
@@ -37,10 +37,10 @@ repo (`poupe-certo-front`).
 
 **Purpose**: Tabela nova com RLS + módulo Nest vazio — bloqueia as três user stories (todas leem/escrevem `shopping_list_items`).
 
-- [ ] T002 Adicionar `model ShoppingListItem` a `poupe-certo-back/prisma/schema.prisma` (campos e relations conforme `data-model.md`) e o `shoppingListItems ShoppingListItem[]` correspondente em `Profile`, `Product` e `Market`
-- [ ] T003 Criar migration `poupe-certo-back/prisma/migrations/<timestamp>_shopping_list/migration.sql`: tabela `shopping_list_items` (+ `CHECK (price > 0)`, `UNIQUE (user_id, product_ean)`), RLS `FOR ALL TO authenticated USING/WITH CHECK (user_id = auth.uid())`, `GRANT SELECT, INSERT, UPDATE, DELETE ... TO authenticated` — sem policy pública (ver data-model.md); rodar `npx prisma migrate dev` no back para aplicar e regenerar o client (depende de T002)
-- [ ] T004 [P] Criar esqueleto do módulo `poupe-certo-back/src/shopping-list/` (`shopping-list.module.ts` importando `AuthModule`, `shopping-list.controller.ts` e `shopping-list.service.ts` vazios, `dto/shopping-list.schema.ts` vazio) — mesmo padrão de `src/markets/` (depende de T003 pro client Prisma existir)
-- [ ] T005 Registrar `ShoppingListModule` em `poupe-certo-back/src/app.module.ts` (depende de T004)
+- [X] T002 Adicionar `model ShoppingListItem` a `poupe-certo-back/prisma/schema.prisma` (campos e relations conforme `data-model.md`) e o `shoppingListItems ShoppingListItem[]` correspondente em `Profile`, `Product` e `Market`
+- [X] T003 Criar migration `poupe-certo-back/prisma/migrations/<timestamp>_shopping_list/migration.sql`: tabela `shopping_list_items` (+ `CHECK (price > 0)`, `UNIQUE (user_id, product_ean)`), RLS `FOR ALL TO authenticated USING/WITH CHECK (user_id = auth.uid())`, `GRANT SELECT, INSERT, UPDATE, DELETE ... TO authenticated` — sem policy pública (ver data-model.md); rodar `npx prisma migrate dev` no back para aplicar e regenerar o client (depende de T002)
+- [X] T004 [P] Criar esqueleto do módulo `poupe-certo-back/src/shopping-list/` (`shopping-list.module.ts` importando `AuthModule`, `shopping-list.controller.ts` e `shopping-list.service.ts` vazios, `dto/shopping-list.schema.ts` vazio) — mesmo padrão de `src/markets/` (depende de T003 pro client Prisma existir)
+- [X] T005 Registrar `ShoppingListModule` em `poupe-certo-back/src/app.module.ts` (depende de T004)
 
 **Checkpoint**: banco e módulo prontos; nenhum endpoint funcional ainda.
 
@@ -54,18 +54,17 @@ repo (`poupe-certo-front`).
 
 ### Implementation for User Story 1
 
-- [ ] T006 [P] [US1] Extrair um helper `getBestActiveOffer(tx, ean)` reaproveitando a lógica de `latestActivePerMarket` + menor preço já existente em `poupe-certo-back/src/products/products.service.ts` (exportar a função ou movê-la pra um arquivo compartilhado, ver research.md#4) — retorna `{ marketId, price } | null`
-- [ ] T007 [US1] Implementar `addToListSchema` (`{ productEan: string }`, reaproveitando `eanSchema` de `products/dto/product.schema.ts`) em `poupe-certo-back/src/shopping-list/dto/shopping-list.schema.ts` (depende de T004)
-- [ ] T008 [US1] Implementar `ShoppingListService.add(userId, productEan)` em `poupe-certo-back/src/shopping-list/shopping-list.service.ts`: `asUser`, valida produto aprovado, chama `getBestActiveOffer` (404 `"Produto sem oferta ativa para adicionar à lista"` se `null`), `upsert` por `(userId, productEan)` com `update: {}` (idempotente, ver research.md#2) (depende de T006, T007)
-- [ ] T009 [US1] Implementar `ShoppingListService.list(userId)` no mesmo arquivo: `asUser`, `findMany` ordenado por `purchased asc, createdAt desc`, incluindo `product` (`ean,name,brand,qty`) e `market` (`id,name`) (depende de T004)
-- [ ] T010 [US1] Implementar `ShoppingListController` (`GET /me/list`, `POST /me/list`) em `poupe-certo-back/src/shopping-list/shopping-list.controller.ts` — `SupabaseJwtGuard` nas duas, `WriteThrottle` no POST, `ZodValidationPipe(addToListSchema)` no body (depende de T008, T009)
-- [ ] T011 [P] [US1] Criar `poupe-certo-front/src/lib/api/shopping-list.ts`: `shoppingListItemSchema` (Zod), `getShoppingList()`, `addToList(productEan)`
-- [ ] T012 [US1] Criar `poupe-certo-front/src/hooks/use-shopping-list.ts`: `useShoppingList()` (`queryKey: ["shopping-list"]`) e `useAddToList()` (invalida `["shopping-list"]` no sucesso) (depende de T011)
-- [ ] T013 [US1] Criar `poupe-certo-front/src/app/(shell)/list/list-view.tsx`: client component que lista os itens (nome/qty/marca do produto, preço, mercado) e estado vazio convidando a escanear/buscar um produto (quickstart.md Cenário 5) — sem checkbox/remover ainda (depende de T012)
-- [ ] T014 [US1] Criar `poupe-certo-front/src/app/(shell)/list/page.tsx` — rota fina delegando a `ListView` (depende de T013)
-- [ ] T015 [P] [US1] Adicionar entrada "Minha Lista" em `poupe-certo-front/src/components/mobile-action-bar.tsx`
-- [ ] T016 [P] [US1] Adicionar entrada "Minha Lista" em `poupe-certo-front/src/components/site-header.tsx`
-- [ ] T017 [US1] Em `poupe-certo-front/src/app/(shell)/product/[ean]/product-view.tsx`: remover o `useState` de `favorite`/botão coração (stub sem persistência, FR-008); trocar o `onClick` do botão "Adicionar à lista" (hoje só `toast.success`) por `useAddToList()`; usar `useShoppingList()` pra saber se `product.ean` já está na lista e refletir isso no botão (desabilitado/"Já está na lista", FR-009) (depende de T012)
+- [X] T006 [P] [US1] Extrair um helper `getBestActiveOffer(tx, ean)` reaproveitando a lógica de `latestActivePerMarket` + menor preço já existente em `poupe-certo-back/src/products/products.service.ts` (exportar a função ou movê-la pra um arquivo compartilhado, ver research.md#4) — retorna `{ marketId, price } | null`
+- [X] T007 [US1] Implementar `addToListSchema` (`{ productEan: string }`, reaproveitando `eanSchema` de `products/dto/product.schema.ts`) em `poupe-certo-back/src/shopping-list/dto/shopping-list.schema.ts` (depende de T004)
+- [X] T008 [US1] Implementar `ShoppingListService.add(userId, productEan)` em `poupe-certo-back/src/shopping-list/shopping-list.service.ts`: `asUser`, valida produto aprovado, chama `getBestActiveOffer` (404 `"Produto sem oferta ativa para adicionar à lista"` se `null`), `upsert` por `(userId, productEan)` com `update: {}` (idempotente, ver research.md#2) (depende de T006, T007)
+- [X] T009 [US1] Implementar `ShoppingListService.list(userId)` no mesmo arquivo: `asUser`, `findMany` ordenado por `purchased asc, createdAt desc`, incluindo `product` (`ean,name,brand,qty`) e `market` (`id,name`) (depende de T004)
+- [X] T010 [US1] Implementar `ShoppingListController` (`GET /me/list`, `POST /me/list`) em `poupe-certo-back/src/shopping-list/shopping-list.controller.ts` — `SupabaseJwtGuard` nas duas, `WriteThrottle` no POST, `ZodValidationPipe(addToListSchema)` no body (depende de T008, T009)
+- [X] T011 [P] [US1] Criar `poupe-certo-front/src/lib/api/shopping-list.ts`: `shoppingListItemSchema` (Zod), `getShoppingList()`, `addToList(productEan)`
+- [X] T012 [US1] Criar `poupe-certo-front/src/hooks/use-shopping-list.ts`: `useShoppingList()` (`queryKey: ["shopping-list"]`) e `useAddToList()` (invalida `["shopping-list"]` no sucesso) (depende de T011)
+- [X] T013/T014 [US1] Criado `poupe-certo-front/src/app/(shell)/list/page.tsx` já como client component único (sem `list-view.tsx` separado) — mesmo padrão de `app/(shell)/profile/page.tsx`, que também não separa página/view porque não há fetch server-side (desvio de plan.md, sem necessidade real de dois arquivos aqui)
+- [X] T015 [P] [US1] Adicionada entrada "Minha Lista" em `poupe-certo-front/src/components/mobile-action-bar.tsx`
+- [X] T016 [P] [US1] Adicionada entrada "Minha Lista" em `poupe-certo-front/src/components/site-header.tsx`
+- [X] T017 [US1] Em `poupe-certo-front/src/app/(shell)/product/[ean]/product-view.tsx`: removido `useState` de `favorite`/botão coração (FR-008); "Adicionar à lista" agora usa `useAddToList()`; `useShoppingList()` reflete "Já está na lista" (FR-009)
 
 **Checkpoint**: US1 funcional de ponta a ponta — quickstart.md Cenário 1 deve passar.
 
@@ -79,12 +78,12 @@ repo (`poupe-certo-front`).
 
 ### Implementation for User Story 2
 
-- [ ] T018 [US2] Implementar `toggleListItemSchema` (`{ purchased: boolean }`) em `poupe-certo-back/src/shopping-list/dto/shopping-list.schema.ts` (depende de T004)
-- [ ] T019 [US2] Implementar `ShoppingListService.setPurchased(userId, id, purchased)` em `shopping-list.service.ts`: `asUser`, `update({ where: { id, userId }, data: { purchased } })` — capturar `Prisma.PrismaClientKnownRequestError` código `P2025` e relançar `NotFoundException` (mesmo padrão de tratamento de erro Prisma de `products.service.ts#create`) (depende de T009)
-- [ ] T020 [US2] Implementar `PATCH /me/list/:id` no controller, `ZodValidationPipe(toggleListItemSchema)` no body, `uuidParamSchema` no param (mesmo padrão de `price-reports.controller.ts#confirm`) (depende de T018, T019)
-- [ ] T021 [US2] Adicionar `toggleListItem(id, purchased)` a `poupe-certo-front/src/lib/api/shopping-list.ts` (depende de T011)
-- [ ] T022 [US2] Adicionar `useToggleListItem()` a `use-shopping-list.ts` (invalida `["shopping-list"]`) (depende de T021)
-- [ ] T023 [US2] Em `list-view.tsx`, adicionar checkbox por item com estilo riscado quando `purchased` (depende de T013, T022)
+- [X] T018 [US2] Implementar `toggleListItemSchema` (`{ purchased: boolean }`) em `poupe-certo-back/src/shopping-list/dto/shopping-list.schema.ts` (depende de T004)
+- [X] T019 [US2] Implementar `ShoppingListService.setPurchased(userId, id, purchased)` em `shopping-list.service.ts`: `asUser`, `update({ where: { id, userId }, data: { purchased } })` — capturar `Prisma.PrismaClientKnownRequestError` código `P2025` e relançar `NotFoundException` (mesmo padrão de tratamento de erro Prisma de `products.service.ts#create`) (depende de T009)
+- [X] T020 [US2] Implementar `PATCH /me/list/:id` no controller, `ZodValidationPipe(toggleListItemSchema)` no body, `uuidParamSchema` no param (mesmo padrão de `price-reports.controller.ts#confirm`) (depende de T018, T019)
+- [X] T021 [US2] Adicionado `toggleListItem(id, purchased)` a `poupe-certo-front/src/lib/api/shopping-list.ts`
+- [X] T022 [US2] Adicionado `useToggleListItem()` a `use-shopping-list.ts`
+- [X] T023 [US2] Checkbox por item com estilo riscado quando `purchased`, em `list/page.tsx`
 
 **Checkpoint**: US1 + US2 funcionais — quickstart.md Cenários 1 e 2 devem passar.
 
@@ -98,11 +97,11 @@ repo (`poupe-certo-front`).
 
 ### Implementation for User Story 3
 
-- [ ] T024 [US3] Implementar `ShoppingListService.remove(userId, id)` em `shopping-list.service.ts`: `asUser`, `delete({ where: { id, userId } })` — mesmo tratamento de `P2025` → `NotFoundException` de T019 (depende de T009)
-- [ ] T025 [US3] Implementar `DELETE /me/list/:id` no controller, `@HttpCode(204)`, `SupabaseJwtGuard` + `WriteThrottle` (depende de T024)
-- [ ] T026 [US3] Adicionar `removeFromList(id)` a `poupe-certo-front/src/lib/api/shopping-list.ts` (depende de T011)
-- [ ] T027 [US3] Adicionar `useRemoveListItem()` a `use-shopping-list.ts` (invalida `["shopping-list"]`) (depende de T026)
-- [ ] T028 [US3] Em `list-view.tsx`, adicionar botão de remover por item (depende de T013, T027)
+- [X] T024 [US3] Implementar `ShoppingListService.remove(userId, id)` em `shopping-list.service.ts`: `asUser`, `delete({ where: { id, userId } })` — mesmo tratamento de `P2025` → `NotFoundException` de T019 (depende de T009)
+- [X] T025 [US3] Implementar `DELETE /me/list/:id` no controller, `@HttpCode(204)`, `SupabaseJwtGuard` + `WriteThrottle` (depende de T024)
+- [X] T026 [US3] Adicionado `removeFromList(id)` a `poupe-certo-front/src/lib/api/shopping-list.ts`
+- [X] T027 [US3] Adicionado `useRemoveListItem()` a `use-shopping-list.ts`
+- [X] T028 [US3] Botão de remover por item em `list/page.tsx`
 
 **Checkpoint**: as três user stories funcionando de forma independente e integrada.
 
@@ -110,10 +109,10 @@ repo (`poupe-certo-front`).
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T029 [P] Rodar suíte e2e existente do back (`npm run test:e2e` em `poupe-certo-back`) para confirmar que nada quebrou em `products`/`price-reports`
-- [ ] T030 [P] Rodar `npm test` (vitest) em `poupe-certo-front`
-- [ ] T031 Buscar outros usos de `Heart`/`favorite` órfãos após a remoção do stub em `product-view.tsx` (`grep -rn "favorite" src/` em `poupe-certo-front`) — remover import/ícone não usado (YAGNI, Princípio VI)
-- [ ] T032 Executar manualmente quickstart.md Cenários 1–5 de ponta a ponta, incluindo o Cenário 4 (isolamento entre contas — tentar `PATCH`/`DELETE` no item de outra conta via curl/Postman e confirmar 404)
+- [X] T029 [P] Rodar suíte e2e existente do back (`npm run test:e2e` em `poupe-certo-back`) — 6 suítes / 13 testes, todos verdes; nada quebrou em `products`/`price-reports`
+- [X] T030 [P] Rodar `npm test` (vitest, 37/37) e `npx playwright test` (40/40, Mobile+Desktop) em `poupe-certo-front` — inclui os specs de scan que este trabalho tocou
+- [X] T031 Buscar usos de `Heart`/`favorite` órfãos (`grep -rin "favorite\|heart" src/`) — nenhum resultado, remoção do stub não deixou lixo
+- [ ] T032 Executar manualmente quickstart.md Cenários 1–5 de ponta a ponta — **não concluído nesta sessão**: exige login Google real (Google-only OAuth, sem bypass de dev) e uma segunda conta pra validar o Cenário 4 (isolamento entre contas), o que não é automatizável neste ambiente. Verificado o que dava pra verificar sem login: `poupe-certo-back` sobe limpo com as 4 rotas (`GET/POST /users/me/list`, `PATCH/DELETE /users/me/list/:id`) mapeadas; `GET /users/me/list` sem token responde 401 (guard funcionando); `poupe-certo-front` compila e `/list` responde 200. Fica para QA manual do usuário.
 
 ---
 

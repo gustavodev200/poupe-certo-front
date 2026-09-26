@@ -34,14 +34,14 @@ back (Nest + Prisma — tabela nova com RLS, módulo `shopping-list`).
 
 **Constraints**: Snapshot de preço/mercado é imutável após criado (FR-002) — não pode ser um `include` dinâmico da oferta atual, tem que copiar os valores na hora do INSERT; um item por (usuário, produto) é reforçado por constraint única no banco, não só checagem na aplicação (evita corrida entre abas, ver Edge Cases da spec)
 
-**Scale/Scope**: 3 endpoints novos (`GET/POST /me/list`, `PATCH /me/list/:id`, `DELETE /me/list/:id`), 1 tabela nova, 1 página nova no front, 2 pontos de navegação (mobile-action-bar, site-header), 1 botão reescrito (product-view.tsx) substituindo 2 stubs existentes
+**Scale/Scope**: 3 endpoints novos (`GET/POST /users/me/list`, `PATCH /users/me/list/:id`, `DELETE /users/me/list/:id`), 1 tabela nova, 1 página nova no front, 2 pontos de navegação (mobile-action-bar, site-header), 1 botão reescrito (product-view.tsx) substituindo 2 stubs existentes
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
 - **I. Stack Declarada, Não Assumida** — ✅ `project.config.json` de ambos os repos confirma `preset: "prisma-postgres"`. Nenhuma skill Supabase client-side é usada; front continua sem acessar tabelas Supabase diretamente, só a API Nest.
-- **II. Zod na Borda, Sempre** — ✅ Body de `POST /me/list` (`{ productEan }`) e de `PATCH /me/list/:id` (`{ purchased: boolean }`) validados com `ZodValidationPipe`, mesmo padrão de `price-report.schema.ts`.
+- **II. Zod na Borda, Sempre** — ✅ Body de `POST /users/me/list` (`{ productEan }`) e de `PATCH /users/me/list/:id` (`{ purchased: boolean }`) validados com `ZodValidationPipe`, mesmo padrão de `price-report.schema.ts`.
 - **III. Autorização Explícita no Servidor** — ✅ Todas as rotas exigem `SupabaseJwtGuard` e usam `asUser(userId, ...)` — toda query filtra `WHERE user_id = userId` (never confiar em id vindo do body); `PATCH`/`DELETE` primeiro confirmam `findFirst({ id, userId })` antes de alterar, então tentar mexer no item de outra conta sempre cai em `NotFoundException`, nunca em "sem permissão" que vazaria existência do id.
 - **IV. RLS Obrigatória em Tabelas Supabase** — ✅ Tabela nova `shopping_list_items` nasce com RLS habilitada na mesma migration, com policies own-row (`SELECT/INSERT/UPDATE/DELETE ... USING (user_id = auth.uid())`), mesmo padrão de `price_confirmations`/`profiles`. Nenhum `USING (true)` — é dado 100% privado, sem leitura pública equivalente a `price_confirmations_select_for_active_reports`.
 - **V. Segurança Antes do Code Review** — ⚠️ Aplicável: feature cria tabela nova de dado de usuário. `/security` roda antes do `/review`, focando em: (a) RLS realmente impede ver/alterar item de outra conta (teste com dois `userId` diferentes, não só revisão de policy); (b) `productEan` do body é validado (existe e está aprovado) antes de criar snapshot, evitando lista referenciar produto inexistente; (c) unicidade (usuário, produto) reforçada por constraint de banco, não só lógica da aplicação.
@@ -96,7 +96,7 @@ poupe-certo-back/                           # repo-irmão (backend Nest + Prisma
 └── src/
     └── shopping-list/                      # NOVO módulo (mesmo padrão de markets/)
         ├── shopping-list.module.ts
-        ├── shopping-list.controller.ts     # GET/POST /me/list, PATCH+DELETE /me/list/:id
+        ├── shopping-list.controller.ts     # GET/POST /users/me/list, PATCH+DELETE /users/me/list/:id
         ├── shopping-list.service.ts        # asUser em toda query; snapshot no INSERT
         └── dto/
             └── shopping-list.schema.ts     # Zod: addToListSchema, toggleListItemSchema
