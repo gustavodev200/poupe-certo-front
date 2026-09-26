@@ -10,13 +10,16 @@ import { cn } from "@/lib/utils";
 import { useLocationStore, type RecentCity } from "@/stores/location-store";
 import { useEstados, useMunicipios } from "@/hooks/use-ibge-locations";
 import { useSaveLocation } from "@/hooks/use-profile-location";
+import { useSession } from "@/hooks/use-session";
 import { ModeToggle } from "@/components/mode-toggle";
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { session } = useSession();
   const storedUf = useLocationStore((s) => s.uf);
   const storedCity = useLocationStore((s) => s.city);
   const recentCities = useLocationStore((s) => s.recentCities);
+  const setLocation = useLocationStore((s) => s.setLocation);
   const saveLocation = useSaveLocation();
 
   const estados = useEstados();
@@ -48,6 +51,14 @@ export default function OnboardingPage() {
 
   function finish() {
     if (!city || !activeUf) return;
+    // Anônimo não tem perfil no backend pra persistir — guarda só localmente
+    // e segue. Logado grava no backend (fonte de verdade entre dispositivos);
+    // o próprio hook também atualiza o store local no sucesso.
+    if (!session) {
+      setLocation(activeUf, city);
+      router.push("/");
+      return;
+    }
     saveLocation.mutate(
       { city, uf: activeUf },
       { onSuccess: () => router.push("/") }
