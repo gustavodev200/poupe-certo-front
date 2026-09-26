@@ -38,7 +38,7 @@ export default function HomePage() {
 
   return (
     <>
-      <section className="bg-linear-135 from-gradient-hero-from to-gradient-hero-to text-primary-foreground">
+      <section className="bg-primary text-primary-foreground">
         <div className="mx-auto grid max-w-6xl gap-8 px-6 py-11 md:grid-cols-2 md:items-center">
           <div>
             <div className="mb-4.5 inline-flex items-center gap-1.5 rounded-lg border border-primary-foreground/20 px-2.5 py-1 text-xs font-medium">
