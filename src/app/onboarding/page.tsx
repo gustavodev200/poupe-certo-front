@@ -2,30 +2,36 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ScanBarcode, Search } from "lucide-react";
+import { Check, RefreshCw, ScanBarcode, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { CITIES } from "@/lib/mock/community";
 import { useLocationStore } from "@/stores/location-store";
+import { useEstados, useMunicipios } from "@/hooks/use-ibge-locations";
+import { useSaveLocation } from "@/hooks/use-profile-location";
 import { ModeToggle } from "@/components/mode-toggle";
-
-const UFS = Object.keys(CITIES);
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const setLocation = useLocationStore((s) => s.setLocation);
-  const [uf, setUf] = useState(UFS[0]);
+  const storedUf = useLocationStore((s) => s.uf);
+  const storedCity = useLocationStore((s) => s.city);
+  const saveLocation = useSaveLocation();
+
+  const estados = useEstados();
+  const [uf, setUf] = useState<string | null>(storedUf);
   const [cityQuery, setCityQuery] = useState("");
-  const [city, setCity] = useState<string | null>(null);
+  const [city, setCity] = useState<string | null>(storedCity);
+
+  const activeUf = uf ?? estados.data?.[0]?.sigla ?? null;
+  const municipios = useMunicipios(activeUf);
 
   const cityList = useMemo(() => {
     const q = cityQuery.trim().toLowerCase();
-    return (CITIES[uf] ?? []).filter(
-      (name) => !q || name.toLowerCase().includes(q)
+    return (municipios.data ?? []).filter(
+      (m) => !q || m.nome.toLowerCase().includes(q)
     );
-  }, [uf, cityQuery]);
+  }, [municipios.data, cityQuery]);
 
   function pickUf(next: string) {
     setUf(next);
@@ -34,9 +40,11 @@ export default function OnboardingPage() {
   }
 
   function finish() {
-    if (!city) return;
-    setLocation(uf, city);
-    router.push("/");
+    if (!city || !activeUf) return;
+    saveLocation.mutate(
+      { city, uf: activeUf },
+      { onSuccess: () => router.push("/") }
+    );
   }
 
   return (
@@ -61,23 +69,44 @@ export default function OnboardingPage() {
         </p>
 
         <div className="mb-2 text-sm font-medium">Estado</div>
-        <div className="no-scrollbar mb-5 flex gap-2 overflow-x-auto pb-1">
-          {UFS.map((option) => (
-            <button
-              key={option}
+        {estados.isError ? (
+          <div className="mb-5 rounded-lg border border-border p-4 text-center">
+            <p className="mb-2.5 text-sm text-muted-foreground">
+              Não conseguimos carregar a lista de estados agora.
+            </p>
+            <Button
               type="button"
-              onClick={() => pickUf(option)}
-              className={cn(
-                "shrink-0 rounded-lg border px-3.5 py-2 text-sm font-medium",
-                option === uf
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-transparent"
-              )}
+              variant="outline"
+              size="sm"
+              onClick={() => estados.refetch()}
             >
-              {option}
-            </button>
-          ))}
-        </div>
+              <RefreshCw className="size-3.5" />
+              Tentar novamente
+            </Button>
+          </div>
+        ) : estados.isLoading ? (
+          <div className="mb-5 text-sm text-muted-foreground">
+            Carregando estados…
+          </div>
+        ) : (
+          <div className="no-scrollbar mb-5 flex gap-2 overflow-x-auto pb-1">
+            {estados.data?.map((estado) => (
+              <button
+                key={estado.sigla}
+                type="button"
+                onClick={() => pickUf(estado.sigla)}
+                className={cn(
+                  "shrink-0 rounded-lg border px-3.5 py-2 text-sm font-medium",
+                  estado.sigla === activeUf
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-transparent"
+                )}
+              >
+                {estado.sigla}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="mb-2 text-sm font-medium">Cidade</div>
         <div className="mb-2.5 flex h-10 items-center gap-2 rounded-lg border border-border px-3 shadow-xs">
@@ -90,40 +119,61 @@ export default function OnboardingPage() {
           />
         </div>
 
-        <div className="mb-5 overflow-hidden rounded-lg border border-border">
-          {cityList.map((name) => (
-            <button
-              key={name}
+        {municipios.isError ? (
+          <div className="mb-5 rounded-lg border border-border p-5 text-center">
+            <p className="mb-2.5 text-sm text-muted-foreground">
+              Não conseguimos carregar as cidades desse estado agora.
+            </p>
+            <Button
               type="button"
-              onClick={() => setCity(name)}
-              className={cn(
-                "flex w-full items-center justify-between border-b border-border px-3.5 py-3.5 text-left last:border-b-0",
-                city === name && "bg-muted"
-              )}
+              variant="outline"
+              size="sm"
+              onClick={() => municipios.refetch()}
             >
-              <div className="text-sm font-medium">{name}</div>
-              {city === name && <Check className="size-4 opacity-75" />}
-            </button>
-          ))}
-          {cityList.length === 0 && (
-            <div className="p-5 text-center">
-              <p className="mb-2.5 text-sm text-muted-foreground">
-                Nenhuma cidade encontrada nesse estado.
-              </p>
-              <p className="text-sm font-medium">
-                Podemos abrir sua cidade quando houver preços informados.
-              </p>
-            </div>
-          )}
-        </div>
+              <RefreshCw className="size-3.5" />
+              Tentar novamente
+            </Button>
+          </div>
+        ) : municipios.isLoading ? (
+          <div className="mb-5 rounded-lg border border-border p-5 text-center text-sm text-muted-foreground">
+            Carregando cidades…
+          </div>
+        ) : (
+          <div className="mb-5 overflow-hidden rounded-lg border border-border">
+            {cityList.map((m) => (
+              <button
+                key={m.nome}
+                type="button"
+                onClick={() => setCity(m.nome)}
+                className={cn(
+                  "flex w-full items-center justify-between border-b border-border px-3.5 py-3.5 text-left last:border-b-0",
+                  city === m.nome && "bg-muted"
+                )}
+              >
+                <div className="text-sm font-medium">{m.nome}</div>
+                {city === m.nome && <Check className="size-4 opacity-75" />}
+              </button>
+            ))}
+            {cityList.length === 0 && (
+              <div className="p-5 text-center">
+                <p className="mb-2.5 text-sm text-muted-foreground">
+                  Nenhuma cidade encontrada nesse estado.
+                </p>
+                <p className="text-sm font-medium">
+                  Podemos abrir sua cidade quando houver preços informados.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         <Button
           onClick={finish}
-          disabled={!city}
+          disabled={!city || saveLocation.isPending}
           className="w-full"
           size="lg"
         >
-          Continuar
+          {saveLocation.isPending ? "Salvando…" : "Continuar"}
         </Button>
         <p className="mt-3 text-center text-xs text-muted-foreground">
           Você pode trocar de cidade a qualquer momento no topo do site.

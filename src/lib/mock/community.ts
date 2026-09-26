@@ -1,14 +1,3 @@
-export const CITIES: Record<string, string[]> = {
-  GO: ["Goianésia", "Goiânia", "Anápolis", "Ceres", "Jaraguá"],
-  SP: ["São Paulo", "Campinas", "Santos"],
-  MG: ["Belo Horizonte", "Uberlândia"],
-  RJ: ["Rio de Janeiro", "Niterói"],
-  BA: ["Salvador", "Feira de Santana"],
-  DF: ["Brasília"],
-  PR: ["Curitiba", "Londrina"],
-  RS: ["Porto Alegre"],
-};
-
 export const TRENDING_SEARCHES = [
   "arroz 5kg",
   "café 500g",

@@ -7,19 +7,26 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { MobileActionBar } from "@/components/mobile-action-bar";
 import { useLocationHydrated, useLocationStore } from "@/stores/location-store";
+import { useMyProfile } from "@/hooks/use-profile-location";
 
 export default function ShellLayout({ children }: LayoutProps<"/">) {
   const router = useRouter();
   const city = useLocationStore((s) => s.city);
   const hasHydrated = useLocationHydrated();
+  const profile = useMyProfile();
+
+  const ready = hasHydrated && (profile.isSuccess || profile.isError);
+  // Backend é a fonte de verdade (pode corrigir um `city` antigo salvo só no
+  // localStorage, de antes da localização passar a ser persistida no perfil).
+  const hasCity = profile.isSuccess ? !!profile.data.city : !!city;
 
   useEffect(() => {
-    if (hasHydrated && !city) {
+    if (ready && !hasCity) {
       router.replace("/onboarding");
     }
-  }, [hasHydrated, city, router]);
+  }, [ready, hasCity, router]);
 
-  if (!hasHydrated || !city) {
+  if (!ready || !hasCity) {
     return null;
   }
 

@@ -2,6 +2,34 @@ import { z } from "zod";
 
 import { api } from "@/lib/api/client";
 
+export const profileSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  displayName: z.string().nullable(),
+  avatarUrl: z.string().nullable(),
+  city: z.string().nullable(),
+  uf: z.string().nullable(),
+  createdAt: z.string(),
+});
+
+export const locationSchema = z.object({
+  city: z.string(),
+  uf: z.string(),
+});
+
+export type Profile = z.infer<typeof profileSchema>;
+export type Location = z.infer<typeof locationSchema>;
+
+export async function getMe(): Promise<Profile> {
+  const { data } = await api.get("/users/me");
+  return profileSchema.parse(data);
+}
+
+export async function updateMyLocation(input: Location): Promise<Location> {
+  const { data } = await api.patch("/users/me/location", input);
+  return locationSchema.parse(data);
+}
+
 export const profileStatsSchema = z.object({
   pricesReported: z.number(),
   productsCreated: z.number(),
