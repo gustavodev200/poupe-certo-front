@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ScanBarcode } from "lucide-react";
+import { BarcodeDetector } from "barcode-detector/ponyfill";
+import { ArrowLeft, Camera, ScanBarcode } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +53,7 @@ export default function EscanearPage() {
   const streamRef = useRef<MediaStream | null>(null);
   const activeRef = useRef(true);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const detectorRef = useRef<BarcodeDetector | null>(null);
 
   const [scanState, setScanState] = useState<ScanState>("idle");
   const [eanInput, setEanInput] = useState("");
@@ -80,25 +82,36 @@ export default function EscanearPage() {
     }, 600);
   }
 
-  async function detectLoop() {
-    if (!("BarcodeDetector" in window) || !window.BarcodeDetector) return;
-    const detector = new window.BarcodeDetector({
-      formats: ["ean_13", "ean_8", "upc_a", "code_128"],
-    });
-    const tick = async () => {
-      if (!activeRef.current || !videoRef.current) return;
-      try {
-        const codes = await detector.detect(videoRef.current);
-        if (codes.length > 0) {
-          onDetected(codes[0].rawValue);
-          return;
-        }
-      } catch {
-        // keep polling
+  function getDetector() {
+    if (!detectorRef.current) {
+      detectorRef.current = new BarcodeDetector({
+        formats: ["ean_13", "ean_8", "upc_a", "code_128"],
+      });
+    }
+    return detectorRef.current;
+  }
+
+  async function detectOnce() {
+    if (!videoRef.current) return false;
+    try {
+      const codes = await getDetector().detect(videoRef.current);
+      if (codes.length > 0) {
+        onDetected(codes[0].rawValue);
+        return true;
       }
-      timerRef.current = setTimeout(tick, 350);
+    } catch {
+      // frame not ready yet, keep trying
+    }
+    return false;
+  }
+
+  function detectLoop() {
+    const tick = async () => {
+      if (!activeRef.current) return;
+      const found = await detectOnce();
+      if (!found) timerRef.current = setTimeout(tick, 350);
     };
-    tick();
+    void tick();
   }
 
   async function startCamera() {
@@ -184,6 +197,12 @@ export default function EscanearPage() {
         {scanState === "error" && (
           <Button variant="secondary" onClick={startCamera}>
             Tentar de novo
+          </Button>
+        )}
+        {scanState === "scanning" && (
+          <Button variant="secondary" onClick={() => void detectOnce()}>
+            <Camera className="size-4" />
+            Capturar código
           </Button>
         )}
       </div>
