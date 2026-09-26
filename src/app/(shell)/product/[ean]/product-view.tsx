@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Heart, ScanBarcode, ThumbsUp, Trophy } from "lucide-react";
+import { AxiosError } from "axios";
+import { Heart, RefreshCw, ScanBarcode, ThumbsUp, Trophy } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -19,16 +21,52 @@ import { cn } from "@/lib/utils";
 import { categoryLabel } from "@/lib/categories";
 import { formatAge } from "@/lib/trust";
 import { useConfirmPrice } from "@/hooks/use-price-reports";
+import { useProductDetail } from "@/hooks/use-products";
 import { mapApiError } from "@/lib/api/errors";
-import type { ProductDetail } from "@/lib/api/products";
 
 function formatPrice(price: number): string {
   return price.toFixed(2).replace(".", ",");
 }
 
-export function ProductView({ product }: Readonly<{ product: ProductDetail }>) {
+export function ProductView({ ean }: Readonly<{ ean: string }>) {
   const [favorite, setFavorite] = useState(false);
-  const confirmPrice = useConfirmPrice(product.ean);
+  const confirmPrice = useConfirmPrice(ean);
+  const { data: product, isLoading, isError, error, refetch } =
+    useProductDetail(ean);
+
+  if (isError) {
+    if (error instanceof AxiosError && error.response?.status === 404) {
+      notFound();
+    }
+    return (
+      <div className="mx-auto max-w-4xl px-6 py-6">
+        <div className="rounded-xl border border-border p-8 text-center">
+          <p className="mb-3 text-sm text-muted-foreground">
+            Não conseguimos carregar este produto agora.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+          >
+            <RefreshCw className="size-3.5" />
+            Tentar novamente
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading || !product) {
+    return (
+      <div className="mx-auto max-w-4xl px-6 py-6">
+        <div className="rounded-xl border border-border p-8 text-center text-sm text-muted-foreground">
+          Carregando produto…
+        </div>
+      </div>
+    );
+  }
 
   const offers = [...product.offers].sort((a, b) => a.price - b.price);
   const best = offers[0] as (typeof offers)[number] | undefined;

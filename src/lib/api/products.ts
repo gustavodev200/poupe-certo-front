@@ -85,6 +85,8 @@ export interface SearchProductsParams {
   sort?: "preco" | "recente";
   page?: number;
   pageSize?: number;
+  city?: string;
+  uf?: string;
 }
 
 export async function searchProducts(
@@ -94,8 +96,18 @@ export async function searchProducts(
   return searchProductsResultSchema.parse(data);
 }
 
-export async function getProductDetail(ean: string): Promise<ProductDetail> {
-  const { data } = await api.get(`/products/${encodeURIComponent(ean)}`);
+export interface ProductDetailParams {
+  city?: string;
+  uf?: string;
+}
+
+export async function getProductDetail(
+  ean: string,
+  params: ProductDetailParams = {},
+): Promise<ProductDetail> {
+  const { data } = await api.get(`/products/${encodeURIComponent(ean)}`, {
+    params,
+  });
   return productDetailSchema.parse(data);
 }
 
