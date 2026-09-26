@@ -17,6 +17,11 @@ export const newProductSchema = z.object({
   brand: z.string().min(2, "Marca deve ter no mínimo 2 caracteres"),
   qty: z.string().min(1, "Informe a quantidade"),
   category: z.enum(CATEGORY_CODES, { error: "Escolha uma categoria" }),
+  marketId: z.string().min(1, "Escolha um mercado"),
+  price: z
+    .string()
+    .min(1, "Informe o preço")
+    .refine((v) => Number(v.replace(",", ".")) > 0, "Preço inválido"),
 });
 
 export type NewProductInput = z.infer<typeof newProductSchema>;

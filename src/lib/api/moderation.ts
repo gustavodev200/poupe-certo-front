@@ -15,6 +15,12 @@ const productRefSchema = z.object({
   name: z.string(),
 });
 
+const pendingProductPriceReportSchema = z.object({
+  id: z.string(),
+  market: marketRefSchema,
+  price: z.number(),
+});
+
 export const pendingProductSchema = z.object({
   ean: z.string(),
   name: z.string(),
@@ -23,6 +29,7 @@ export const pendingProductSchema = z.object({
   category: categorySchema,
   createdBy: z.string(),
   createdAt: z.string(),
+  priceReport: pendingProductPriceReportSchema.nullable(),
 });
 
 export const pendingPriceReportSchema = z.object({

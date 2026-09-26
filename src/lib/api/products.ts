@@ -113,6 +113,8 @@ export interface CreateProductInput {
   qty: string;
   category: string;
   imageUrl?: string;
+  marketId: string;
+  price: number;
 }
 
 export async function createProduct(

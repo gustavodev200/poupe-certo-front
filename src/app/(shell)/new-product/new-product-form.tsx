@@ -1,11 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
-import { Info } from "lucide-react";
+import { Info, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -18,12 +19,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MarketCombobox } from "@/components/market-combobox";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useCreateProduct } from "@/hooks/use-create-product";
+import { useMarkets, useCreateMarket } from "@/hooks/use-markets";
 import { mapApiError } from "@/lib/api/errors";
 import { CATEGORIES } from "@/lib/categories";
 import {
+  createMarketSchema,
   newProductSchema,
+  type CreateMarketInput,
   type NewProductInput,
 } from "@/lib/validations/price-report";
 
@@ -31,22 +36,53 @@ export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
   const router = useRouter();
   const { isReady } = useRequireAuth(`/new-product?ean=${ean}`);
   const createProduct = useCreateProduct();
+  const [showNewMarket, setShowNewMarket] = useState(false);
+
+  const markets = useMarkets();
+  const createMarket = useCreateMarket();
+
   const {
     register,
     control,
     handleSubmit,
+    setValue,
     setError,
     formState: { errors },
   } = useForm<NewProductInput>({
     resolver: zodResolver(newProductSchema),
-    defaultValues: { name: "", brand: "", qty: "", category: undefined },
+    defaultValues: {
+      name: "",
+      brand: "",
+      qty: "",
+      category: undefined,
+      marketId: "",
+      price: "",
+    },
+  });
+
+  const {
+    register: registerMarket,
+    handleSubmit: handleSubmitMarket,
+    reset: resetMarketForm,
+    formState: { errors: marketErrors },
+  } = useForm<CreateMarketInput>({
+    resolver: zodResolver(createMarketSchema),
+    defaultValues: { name: "" },
   });
 
   if (!isReady) return null;
 
   function onSubmit(values: NewProductInput) {
     createProduct.mutate(
-      { ean, ...values },
+      {
+        ean,
+        name: values.name,
+        brand: values.brand,
+        qty: values.qty,
+        category: values.category,
+        marketId: values.marketId,
+        price: Number(values.price.replace(",", ".")),
+      },
       {
         onSuccess: (result) => {
           toast.success(
@@ -66,6 +102,18 @@ export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
         },
       }
     );
+  }
+
+  function onCreateMarket(values: CreateMarketInput) {
+    createMarket.mutate(values, {
+      onSuccess: (market) => {
+        setValue("marketId", market.id);
+        setShowNewMarket(false);
+        resetMarketForm();
+        toast.success("Mercado cadastrado");
+      },
+      onError: (error) => toast.error(mapApiError(error)),
+    });
   }
 
   return (
@@ -139,6 +187,73 @@ export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
             <p className="text-sm text-destructive">
               {errors.category.message}
             </p>
+          )}
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="marketId">Em qual mercado?</Label>
+          <Controller
+            control={control}
+            name="marketId"
+            render={({ field }) => (
+              <MarketCombobox
+                id="marketId"
+                markets={markets.data ?? []}
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="Escolha o mercado"
+              />
+            )}
+          />
+          {errors.marketId && (
+            <p className="text-sm text-destructive">
+              {errors.marketId.message}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowNewMarket((v) => !v)}
+            className="mt-1 inline-flex items-center gap-1 text-sm font-medium underline underline-offset-4"
+          >
+            <Plus className="size-3.5" />
+            Cadastrar novo mercado
+          </button>
+
+          {showNewMarket && (
+            <div className="mt-1 flex flex-col gap-2 rounded-lg border border-dashed border-border p-3.5">
+              <Input placeholder="Nome do mercado" {...registerMarket("name")} />
+              {marketErrors.name && (
+                <p className="text-sm text-destructive">
+                  {marketErrors.name.message}
+                </p>
+              )}
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                disabled={createMarket.isPending}
+                onClick={handleSubmitMarket(onCreateMarket)}
+              >
+                Salvar mercado
+              </Button>
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="price">Preço na etiqueta</Label>
+          <div className="flex items-baseline gap-2 rounded-lg border border-border px-3.5 py-3">
+            <span className="text-lg font-medium text-muted-foreground">
+              R$
+            </span>
+            <input
+              id="price"
+              {...register("price")}
+              placeholder="00,00"
+              inputMode="decimal"
+              className="min-w-0 flex-1 border-none bg-transparent text-3xl font-semibold tracking-tight tabular-nums outline-none"
+            />
+          </div>
+          {errors.price && (
+            <p className="text-sm text-destructive">{errors.price.message}</p>
           )}
         </div>
         <div className="rounded-lg border border-dashed border-border p-5 text-center text-sm text-muted-foreground">

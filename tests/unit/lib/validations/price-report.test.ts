@@ -37,36 +37,47 @@ describe("priceReportSchema", () => {
 });
 
 describe("newProductSchema", () => {
-  it("accepts a valid product with a known category", () => {
-    const parsed = newProductSchema.parse({
-      name: "Feijão Preto",
-      brand: "Camil",
-      qty: "1kg",
-      category: "merc",
-    });
+  const base = {
+    name: "Feijão Preto",
+    brand: "Camil",
+    qty: "1kg",
+    category: "merc" as const,
+    marketId: "b1e1b1e1-0000-0000-0000-000000000000",
+    price: "5,99",
+  };
+
+  it("accepts a valid product with a known category, market and price", () => {
+    const parsed = newProductSchema.parse(base);
     expect(parsed.category).toBe("merc");
+    expect(parsed.marketId).toBe(base.marketId);
+    expect(parsed.price).toBe("5,99");
   });
 
   it("rejects a name shorter than 2 characters", () => {
-    expect(
-      newProductSchema.safeParse({
-        name: "F",
-        brand: "Camil",
-        qty: "1kg",
-        category: "merc",
-      }).success
-    ).toBe(false);
+    expect(newProductSchema.safeParse({ ...base, name: "F" }).success).toBe(
+      false
+    );
   });
 
   it("rejects a category outside the known set", () => {
     expect(
-      newProductSchema.safeParse({
-        name: "Feijão",
-        brand: "Camil",
-        qty: "1kg",
-        category: "eletronicos",
-      }).success
+      newProductSchema.safeParse({ ...base, category: "eletronicos" }).success
     ).toBe(false);
+  });
+
+  it("rejects an empty marketId", () => {
+    expect(newProductSchema.safeParse({ ...base, marketId: "" }).success).toBe(
+      false
+    );
+  });
+
+  it("rejects a price of zero or negative", () => {
+    expect(newProductSchema.safeParse({ ...base, price: "0" }).success).toBe(
+      false
+    );
+    expect(newProductSchema.safeParse({ ...base, price: "-5" }).success).toBe(
+      false
+    );
   });
 });
 

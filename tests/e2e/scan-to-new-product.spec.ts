@@ -5,6 +5,7 @@ import { mockLocation } from "./fixtures/location";
 import { mockJson, resetMockRoutes, startMockBackend } from "./fixtures/mock-backend";
 
 const NEW_EAN = "7899999999999";
+const MARKET_ID = "b1e1b1e1-0000-0000-0000-000000000000";
 
 test.beforeAll(() => startMockBackend());
 test.beforeEach(() => resetMockRoutes());
@@ -16,6 +17,9 @@ test("escanear (digitar EAN) → cadastrar produto novo (US2)", async ({ page })
     exists: false,
     approved: false,
   });
+  mockJson("GET", /^\/markets$/, [
+    { id: MARKET_ID, name: "Mercado B", address: null, city: null, uf: null },
+  ]);
 
   await page.goto("/scan");
   await page.getByPlaceholder("Digitar EAN manualmente").fill(NEW_EAN);
@@ -35,6 +39,9 @@ test("escanear (digitar EAN) → cadastrar produto novo (US2)", async ({ page })
   await page.getByLabel("Quantidade").fill("1kg");
   await page.getByLabel("Categoria").click();
   await page.getByRole("option", { name: "Mercearia" }).click();
+  await page.getByLabel("Em qual mercado?").click();
+  await page.getByRole("option", { name: "Mercado B" }).click();
+  await page.getByLabel("Preço na etiqueta").fill("5,99");
 
   await page.getByRole("button", { name: /Enviar para aprovação/ }).click();
 

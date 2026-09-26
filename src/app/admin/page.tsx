@@ -79,6 +79,7 @@ function ProductsSection({ products }: { products: PendingProduct[] }) {
               <TableHead>Produto</TableHead>
               <TableHead>Categoria</TableHead>
               <TableHead>Qtd</TableHead>
+              <TableHead>Mercado / preço</TableHead>
               <TableHead>Enviado</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -98,6 +99,20 @@ function ProductsSection({ products }: { products: PendingProduct[] }) {
                   </Badge>
                 </TableCell>
                 <TableCell>{p.qty}</TableCell>
+                <TableCell>
+                  {p.priceReport ? (
+                    <>
+                      <div>{p.priceReport.market.name}</div>
+                      <div className="tabular-nums text-xs text-muted-foreground">
+                        R$ {formatPrice(p.priceReport.price)}
+                      </div>
+                    </>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">
+                      Sem preço
+                    </span>
+                  )}
+                </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
                   {formatAge(p.createdAt)}
                 </TableCell>

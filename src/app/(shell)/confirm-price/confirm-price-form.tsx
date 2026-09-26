@@ -9,13 +9,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { MarketCombobox } from "@/components/market-combobox";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useMarkets, useCreateMarket } from "@/hooks/use-markets";
 import { useCreatePriceReport } from "@/hooks/use-price-reports";
@@ -120,18 +114,13 @@ export function ConfirmPriceForm({ product }: Readonly<{ product: ProductDetail 
             control={control}
             name="marketId"
             render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger id="marketId" className="w-full">
-                  <SelectValue placeholder="Escolha o mercado" />
-                </SelectTrigger>
-                <SelectContent>
-                  {markets.data?.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
-                      {m.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <MarketCombobox
+                id="marketId"
+                markets={markets.data ?? []}
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="Escolha o mercado"
+              />
             )}
           />
           {errors.marketId && (
