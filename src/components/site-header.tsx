@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  ListChecks,
   MapPin,
   Search,
   ScanBarcode,
@@ -72,6 +73,11 @@ export function SiteHeader() {
             <Link href="/scan">
               <ScanBarcode className="size-4" />
               Escanear preço
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="icon">
+            <Link href="/list" aria-label="Minha Lista">
+              <ListChecks className="size-4 opacity-65" />
             </Link>
           </Button>
           <ModeToggle />
