@@ -4,6 +4,7 @@ import { useSyncExternalStore } from "react";
 import type { Session } from "@supabase/supabase-js";
 
 import { supabase } from "@/lib/supabase";
+import { getQueryClient } from "@/lib/query-client";
 
 interface SessionState {
   session: Session | null;
@@ -13,8 +14,23 @@ interface SessionState {
 const PENDING: SessionState = { session: null, isPending: true };
 
 let state: SessionState = PENDING;
+let knownUserId: string | null | undefined; // undefined = ainda não observado
 const listeners = new Set<() => void>();
 let listening = false;
+
+function applySession(session: Session | null) {
+  const userId = session?.user.id ?? null;
+  // Cache do react-query não sabe de quem é cada query ("me", stats,
+  // detalhe de produto filtrado por cidade do perfil, ...) — sem isso, trocar
+  // de conta na mesma aba mostra dado da conta anterior até o staleTime
+  // (60s) expirar, porque a query key não muda e nada força o refetch.
+  if (knownUserId !== undefined && knownUserId !== userId) {
+    getQueryClient().clear();
+  }
+  knownUserId = userId;
+  state = { session, isPending: false };
+  listeners.forEach((l) => l());
+}
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
@@ -26,12 +42,10 @@ function subscribe(listener: () => void) {
     // não depende de timing: sempre lê o estado atual, então também serve pra
     // popular a sessão já restaurada de um F5 (não só a troca do ?code= PKCE).
     supabase.auth.getSession().then(({ data }) => {
-      state = { session: data.session, isPending: false };
-      listeners.forEach((l) => l());
+      applySession(data.session);
     });
     supabase.auth.onAuthStateChange((_event, session) => {
-      state = { session, isPending: false };
-      listeners.forEach((l) => l());
+      applySession(session);
     });
   }
   return () => listeners.delete(listener);

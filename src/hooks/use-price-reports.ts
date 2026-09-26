@@ -23,6 +23,7 @@ export function useConfirmPrice(ean: string) {
     mutationFn: (priceReportId: string) => confirmPrice(priceReportId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products", "detail", ean] });
+      queryClient.invalidateQueries({ queryKey: ["products", "search"] });
     },
   });
 }
