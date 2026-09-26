@@ -12,8 +12,15 @@ export const marketSchema = z.object({
 
 export type Market = z.infer<typeof marketSchema>;
 
-export async function listMarkets(): Promise<Market[]> {
-  const { data } = await api.get("/markets");
+export interface ListMarketsParams {
+  city?: string;
+  uf?: string;
+}
+
+export async function listMarkets(
+  params: ListMarketsParams = {}
+): Promise<Market[]> {
+  const { data } = await api.get("/markets", { params });
   return z.array(marketSchema).parse(data);
 }
 

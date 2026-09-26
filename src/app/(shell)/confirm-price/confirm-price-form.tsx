@@ -19,6 +19,7 @@ import {
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useMarkets, useCreateMarket } from "@/hooks/use-markets";
 import { useCreatePriceReport } from "@/hooks/use-price-reports";
+import { useLocationStore } from "@/stores/location-store";
 import { mapApiError } from "@/lib/api/errors";
 import {
   createMarketSchema,
@@ -36,6 +37,8 @@ export function ConfirmPriceForm({ product }: Readonly<{ product: ProductDetail 
   const markets = useMarkets();
   const createMarket = useCreateMarket();
   const createPriceReport = useCreatePriceReport(product.ean);
+  const uf = useLocationStore((s) => s.uf);
+  const city = useLocationStore((s) => s.city);
 
   const {
     register,
@@ -84,7 +87,9 @@ export function ConfirmPriceForm({ product }: Readonly<{ product: ProductDetail 
   }
 
   function onCreateMarket(values: CreateMarketInput) {
-    createMarket.mutate(values, {
+    createMarket.mutate(
+      { ...values, city: city ?? undefined, uf: uf ?? undefined },
+      {
       onSuccess: (market) => {
         setValue("marketId", market.id);
         setShowNewMarket(false);
