@@ -7,7 +7,7 @@ import { Check, RefreshCw, ScanBarcode, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useLocationStore } from "@/stores/location-store";
+import { useLocationStore, type RecentCity } from "@/stores/location-store";
 import { useEstados, useMunicipios } from "@/hooks/use-ibge-locations";
 import { useSaveLocation } from "@/hooks/use-profile-location";
 import { ModeToggle } from "@/components/mode-toggle";
@@ -16,6 +16,7 @@ export default function OnboardingPage() {
   const router = useRouter();
   const storedUf = useLocationStore((s) => s.uf);
   const storedCity = useLocationStore((s) => s.city);
+  const recentCities = useLocationStore((s) => s.recentCities);
   const saveLocation = useSaveLocation();
 
   const estados = useEstados();
@@ -36,6 +37,12 @@ export default function OnboardingPage() {
   function pickUf(next: string) {
     setUf(next);
     setCity(null);
+    setCityQuery("");
+  }
+
+  function pickRecent(recent: RecentCity) {
+    setUf(recent.uf);
+    setCity(recent.city);
     setCityQuery("");
   }
 
@@ -68,6 +75,29 @@ export default function OnboardingPage() {
           mercados perto de você.
         </p>
 
+        {recentCities.length > 0 && (
+          <div className="mb-5">
+            <div className="mb-2 text-sm font-medium">Recentes</div>
+            <div className="flex flex-wrap gap-2">
+              {recentCities.map((recent) => (
+                <button
+                  key={`${recent.uf}-${recent.city}`}
+                  type="button"
+                  onClick={() => pickRecent(recent)}
+                  className={cn(
+                    "rounded-lg border px-3.5 py-2 text-sm font-medium",
+                    recent.uf === activeUf && recent.city === city
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-transparent"
+                  )}
+                >
+                  {recent.city}, {recent.uf}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="mb-2 text-sm font-medium">Estado</div>
         {estados.isError ? (
           <div className="mb-5 rounded-lg border border-border p-4 text-center">
@@ -89,7 +119,7 @@ export default function OnboardingPage() {
             Carregando estados…
           </div>
         ) : (
-          <div className="no-scrollbar mb-5 flex gap-2 overflow-x-auto pb-1">
+          <div className="mb-5 flex flex-wrap gap-2">
             {estados.data?.map((estado) => (
               <button
                 key={estado.sigla}
@@ -139,7 +169,7 @@ export default function OnboardingPage() {
             Carregando cidades…
           </div>
         ) : (
-          <div className="mb-5 overflow-hidden rounded-lg border border-border">
+          <div className="mb-5 max-h-72 overflow-y-auto rounded-lg border border-border">
             {cityList.map((m) => (
               <button
                 key={m.nome}
