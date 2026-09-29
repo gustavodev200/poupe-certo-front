@@ -2,7 +2,12 @@ import { expect, test } from "@playwright/test";
 
 import { mockAuthSession } from "./fixtures/auth";
 import { mockLocation } from "./fixtures/location";
-import { mockJson, resetMockRoutes, startMockBackend } from "./fixtures/mock-backend";
+import {
+  mockJson,
+  mockRoute,
+  resetMockRoutes,
+  startMockBackend,
+} from "./fixtures/mock-backend";
 
 const NEW_EAN = "7899999999999";
 const MARKET_ID = "b1e1b1e1-0000-0000-0000-000000000000";
@@ -91,4 +96,51 @@ test("EAN conhecido no Open Food Facts chega ao cadastro pré-preenchido", async
   await expect(page.getByLabel("Quantidade")).toHaveValue("395 g");
   await expect(page.getByLabel("Categoria")).toContainText("Frios");
   await expect(page.getByText(/Preenchemos com dados do Open Food Facts/)).toBeVisible();
+});
+
+test("cadastrar mercado no meio do formulário mantém os dados e envia cidade/UF", async ({ page }) => {
+  await mockAuthSession(page);
+  await mockLocation(page);
+  mockJson("GET", /^\/users\/me$/, {
+    id: "00000000-0000-4000-8000-000000000000",
+    email: "e2e@poupecerto.test",
+    displayName: "E2E Test",
+    avatarUrl: null,
+    city: "Goianésia",
+    uf: "GO",
+    createdAt: new Date().toISOString(),
+  });
+  mockJson("GET", new RegExp(`^/products/ean/${NEW_EAN}/lookup$`), {
+    found: true,
+    name: "Leite Condensado Moça",
+    brand: "Nestlé",
+    qty: "395 g",
+    category: "fri",
+    imageUrl: null,
+  });
+  const created = { id: MARKET_ID, name: "ebasico", address: null, city: "Goianésia", uf: "GO" };
+  let marketList: unknown[] = [];
+  let postedBody: unknown;
+  mockRoute("GET", /^\/markets$/, () => ({ json: marketList }));
+  mockRoute("POST", /^\/markets$/, (_m, body) => {
+    postedBody = body;
+    marketList = [created];
+    return { status: 201, json: created };
+  });
+
+  await page.goto(`/new-product?ean=${NEW_EAN}`);
+  await expect(page.getByLabel("Nome do produto")).toHaveValue("Leite Condensado Moça");
+  await page.getByLabel("Preço na etiqueta").fill("7,49");
+
+  await page.getByRole("button", { name: "Cadastrar novo mercado" }).click();
+  await page.getByPlaceholder("Nome do mercado").fill("ebasico");
+  await page.getByRole("button", { name: "Salvar mercado" }).click();
+
+  await expect(page.getByText("Mercado cadastrado")).toBeVisible();
+  expect(postedBody).toEqual({ name: "ebasico", city: "Goianésia", uf: "GO" });
+  await expect(page.getByLabel("Em qual mercado?")).toHaveText(/ebasico/);
+  await expect(page.getByLabel("Nome do produto")).toHaveValue("Leite Condensado Moça");
+  await expect(page.getByLabel("Marca")).toHaveValue("Nestlé");
+  await expect(page.getByLabel("Quantidade")).toHaveValue("395 g");
+  await expect(page.getByLabel("Preço na etiqueta")).toHaveValue("7,49");
 });

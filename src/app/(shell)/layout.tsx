@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { MobileActionBar } from "@/components/mobile-action-bar";
+import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { useLocationHydrated, useLocationStore } from "@/stores/location-store";
 import { useMyProfile } from "@/hooks/use-profile-location";
 import { useSession } from "@/hooks/use-session";
@@ -36,12 +37,15 @@ export default function ShellLayout({ children }: LayoutProps<"/">) {
   }
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col">
-      <SiteHeader />
-      <main className="flex min-w-0 flex-1 flex-col pb-20 md:pb-0">
-        <div className="min-w-0">{children}</div>
-      </main>
-      <SiteFooter />
+    <div className="flex min-w-0 flex-1">
+      <AppSidebar />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <SiteHeader />
+        <main className="flex min-w-0 flex-1 flex-col pb-20 md:pb-0">
+          <div className="min-w-0">{children}</div>
+        </main>
+        <SiteFooter />
+      </div>
       <MobileActionBar />
     </div>
   );

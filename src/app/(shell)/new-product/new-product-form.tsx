@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
-import { Info, Loader2, Plus, Sparkles } from "lucide-react";
+import { Info, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -21,17 +21,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MarketCombobox } from "@/components/market-combobox";
+import { NewMarketInline } from "@/components/new-market-inline";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useCreateProduct } from "@/hooks/use-create-product";
 import { useEanLookup } from "@/hooks/use-ean-lookup";
-import { useMarkets, useCreateMarket } from "@/hooks/use-markets";
+import { useMarkets } from "@/hooks/use-markets";
 import { mapApiError } from "@/lib/api/errors";
 import { CATEGORIES } from "@/lib/categories";
 import { pickPrefill } from "@/lib/ean-prefill";
 import {
-  createMarketSchema,
   newProductSchema,
-  type CreateMarketInput,
   type NewProductInput,
 } from "@/lib/validations/price-report";
 
@@ -39,13 +38,11 @@ export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
   const router = useRouter();
   const { isReady } = useRequireAuth(`/new-product?ean=${ean}`);
   const createProduct = useCreateProduct();
-  const [showNewMarket, setShowNewMarket] = useState(false);
 
   const lookup = useEanLookup(ean, isReady);
   const suggestion = lookup.data?.found ? lookup.data : undefined;
 
   const markets = useMarkets();
-  const createMarket = useCreateMarket();
 
   const {
     register,
@@ -65,16 +62,6 @@ export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
       marketId: "",
       price: "",
     },
-  });
-
-  const {
-    register: registerMarket,
-    handleSubmit: handleSubmitMarket,
-    reset: resetMarketForm,
-    formState: { errors: marketErrors },
-  } = useForm<CreateMarketInput>({
-    resolver: zodResolver(createMarketSchema),
-    defaultValues: { name: "" },
   });
 
   // Aplica a sugestão uma vez, quando chega — só em campos intocados.
@@ -119,18 +106,6 @@ export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
         },
       }
     );
-  }
-
-  function onCreateMarket(values: CreateMarketInput) {
-    createMarket.mutate(values, {
-      onSuccess: (market) => {
-        setValue("marketId", market.id);
-        setShowNewMarket(false);
-        resetMarketForm();
-        toast.success("Mercado cadastrado");
-      },
-      onError: (error) => toast.error(mapApiError(error)),
-    });
   }
 
   return (
@@ -243,34 +218,11 @@ export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
               {errors.marketId.message}
             </p>
           )}
-          <button
-            type="button"
-            onClick={() => setShowNewMarket((v) => !v)}
-            className="mt-1 inline-flex items-center gap-1 text-sm font-medium underline underline-offset-4"
-          >
-            <Plus className="size-3.5" />
-            Cadastrar novo mercado
-          </button>
-
-          {showNewMarket && (
-            <div className="mt-1 flex flex-col gap-2 rounded-lg border border-dashed border-border p-3.5">
-              <Input placeholder="Nome do mercado" {...registerMarket("name")} />
-              {marketErrors.name && (
-                <p className="text-sm text-destructive">
-                  {marketErrors.name.message}
-                </p>
-              )}
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                disabled={createMarket.isPending}
-                onClick={handleSubmitMarket(onCreateMarket)}
-              >
-                Salvar mercado
-              </Button>
-            </div>
-          )}
+          <NewMarketInline
+            onCreated={(market) =>
+              setValue("marketId", market.id, { shouldValidate: true })
+            }
+          />
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="price">Preço na etiqueta</Label>

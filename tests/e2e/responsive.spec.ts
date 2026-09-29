@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { mockAuthSession } from "./fixtures/auth";
 import { mockLocation } from "./fixtures/location";
 import { mockJson, resetMockRoutes, startMockBackend } from "./fixtures/mock-backend";
+import { mockMyProducts } from "./fixtures/my-products";
 
 const EAN = "7891234567890";
 const MARKET_ID = "b1e1b1e1-0000-0000-0000-000000000000";
@@ -78,6 +79,13 @@ async function registerCommonRoutes() {
     rankPosition: 8,
   });
   mockJson("GET", /^\/users\/me\/contributions$/, { items: [], page: 1, pageSize: 10, total: 0 });
+  mockMyProducts([
+    {
+      ean: EAN,
+      name: "Produto com um nome muito comprido que precisa truncar sem estourar o layout",
+      status: "PENDING",
+    },
+  ]);
 }
 
 async function expectNoHorizontalOverflow(page: Page, path: string) {
@@ -97,7 +105,12 @@ test.beforeAll(() => startMockBackend());
 test.beforeEach(() => resetMockRoutes());
 
 const PUBLIC_ROUTES = ["/", "/search?q=arroz", `/product/${EAN}`];
-const AUTH_ROUTES = [`/confirm-price?ean=${EAN}`, "/new-product?ean=0000000000000", "/profile"];
+const AUTH_ROUTES = [
+  `/confirm-price?ean=${EAN}`,
+  "/new-product?ean=0000000000000",
+  "/profile",
+  "/my-products",
+];
 
 for (const viewport of VIEWPORTS) {
   test.describe(`overflow horizontal em ${viewport.width}px`, () => {

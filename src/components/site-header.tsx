@@ -4,8 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ListChecks,
   MapPin,
+  Menu,
   Search,
   ScanBarcode,
   ShoppingBasket,
@@ -25,6 +25,7 @@ import { useSession } from "@/hooks/use-session";
 import { getDisplayUser } from "@/lib/auth";
 import { useLocationStore } from "@/stores/location-store";
 import { CATEGORIES } from "@/lib/categories";
+import { useAppSidebarStore } from "@/stores/sidebar-store";
 
 const CATEGORY_ICONS = {
   ShoppingBasket,
@@ -40,6 +41,7 @@ export function SiteHeader() {
   const { session } = useSession();
   const { uf, city } = useLocationStore();
   const [query, setQuery] = useState("");
+  const openMenu = useAppSidebarStore((s) => s.setMobileOpen);
 
   function submitSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -53,7 +55,18 @@ export function SiteHeader() {
   return (
     <div className="sticky top-0 z-40 border-b border-border bg-background">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3 md:px-6">
-        <Link href="/" className="flex shrink-0 items-center gap-2">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => openMenu(true)}
+          aria-label="Abrir menu"
+          className="md:hidden"
+        >
+          <Menu className="size-4.5" />
+        </Button>
+
+        {/* Em md+ a marca já aparece no topo do menu lateral. */}
+        <Link href="/" className="flex shrink-0 items-center gap-2 md:hidden">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <ScanBarcode className="size-4.5" />
           </div>
@@ -73,11 +86,6 @@ export function SiteHeader() {
             <Link href="/scan">
               <ScanBarcode className="size-4" />
               Escanear preço
-            </Link>
-          </Button>
-          <Button asChild variant="outline" size="icon">
-            <Link href="/list" aria-label="Minha Lista">
-              <ListChecks className="size-4 opacity-65" />
             </Link>
           </Button>
           <ModeToggle />
