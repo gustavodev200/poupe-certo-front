@@ -176,7 +176,23 @@ function PriceReportsSection({ reports }: { reports: PendingPriceReport[] }) {
           <TableBody>
             {reports.map((r) => (
               <TableRow key={r.id}>
-                <TableCell className="font-medium">{r.product.name}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <ProductImage
+                      src={r.product.imageUrl}
+                      alt={`Foto de ${r.product.name}`}
+                      sizes="48px"
+                      className="size-12"
+                      iconClassName="size-5"
+                    />
+                    <div>
+                      <div className="font-medium">{r.product.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {r.product.brand} · {r.product.ean}
+                      </div>
+                    </div>
+                  </div>
+                </TableCell>
                 <TableCell>{r.market.name}</TableCell>
                 <TableCell className="tabular-nums">
                   R$ {formatPrice(r.price)}

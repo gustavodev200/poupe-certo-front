@@ -52,8 +52,7 @@ export function ConfirmPriceForm({ product }: Readonly<{ product: ProductDetail 
         onSuccess: (result) => {
           if (result.status === "PENDING_REVIEW") {
             toast.info(
-              result.message ??
-                "Preço fora do padrão — enviado para revisão."
+              result.message ?? "Preço enviado para aprovação."
             );
           } else {
             toast.success(`Preço registrado · +${result.pointsAwarded} pontos`);

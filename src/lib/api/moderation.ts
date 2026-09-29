@@ -35,7 +35,10 @@ export const pendingProductSchema = z.object({
 
 export const pendingPriceReportSchema = z.object({
   id: z.string(),
-  product: productRefSchema,
+  product: productRefSchema.extend({
+    brand: z.string(),
+    imageUrl: z.string().nullable().default(null),
+  }),
   market: marketRefSchema,
   price: z.number(),
   reportedBy: z.string(),
