@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { createMarket, listMarkets, type CreateMarketInput } from "@/lib/api/markets";
+import {
+  createMarket,
+  listMarkets,
+  type CreateMarketInput,
+  type Market,
+} from "@/lib/api/markets";
 import { useLocationStore } from "@/stores/location-store";
 
 export function useMarkets() {
@@ -17,7 +22,16 @@ export function useCreateMarket() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateMarketInput) => createMarket(input),
-    onSuccess: () => {
+    onSuccess: (market) => {
+      // Já coloca o mercado na lista da cidade dele, pro combobox mostrar o
+      // nome selecionado sem esperar o refetch.
+      queryClient.setQueryData<Market[]>(
+        ["markets", { city: market.city, uf: market.uf }],
+        (old) =>
+          old && !old.some((m) => m.id === market.id)
+            ? [...old, market].sort((a, b) => a.name.localeCompare(b.name))
+            : old
+      );
       queryClient.invalidateQueries({ queryKey: ["markets"] });
     },
   });
