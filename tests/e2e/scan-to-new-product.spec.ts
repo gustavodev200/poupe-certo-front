@@ -57,3 +57,38 @@ test("escanear (digitar EAN) → cadastrar produto novo (US2)", async ({ page })
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByText(/enviado para aprovação/i)).toBeVisible();
 });
+
+test("EAN conhecido no Open Food Facts chega ao cadastro pré-preenchido", async ({ page }) => {
+  await mockAuthSession(page);
+  await mockLocation(page);
+  mockJson("GET", /^\/users\/me$/, {
+    id: "00000000-0000-4000-8000-000000000000",
+    email: "e2e@poupecerto.test",
+    displayName: "E2E Test",
+    avatarUrl: null,
+    city: "Goianésia",
+    uf: "GO",
+    createdAt: new Date().toISOString(),
+  });
+  mockJson("GET", new RegExp(`^/products/ean/${NEW_EAN}/exists$`), {
+    exists: false,
+    approved: false,
+  });
+  mockJson("GET", new RegExp(`^/products/ean/${NEW_EAN}/lookup$`), {
+    found: true,
+    name: "Leite Condensado Moça",
+    brand: "Nestlé",
+    qty: "395 g",
+    category: "fri",
+    imageUrl: null,
+  });
+  mockJson("GET", /^\/markets$/, []);
+
+  await page.goto(`/new-product?ean=${NEW_EAN}`);
+
+  await expect(page.getByLabel("Nome do produto")).toHaveValue("Leite Condensado Moça");
+  await expect(page.getByLabel("Marca")).toHaveValue("Nestlé");
+  await expect(page.getByLabel("Quantidade")).toHaveValue("395 g");
+  await expect(page.getByLabel("Categoria")).toContainText("Frios");
+  await expect(page.getByText(/Preenchemos com dados do Open Food Facts/)).toBeVisible();
+});

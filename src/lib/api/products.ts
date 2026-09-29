@@ -48,6 +48,8 @@ export const productDetailSchema = z.object({
   brand: z.string(),
   qty: z.string(),
   category: categorySchema,
+  // Default mantém compatível com respostas antigas sem o campo.
+  imageUrl: z.string().nullable().default(null),
   offers: z.array(offerDetailSchema),
   stats: productStatsSchema,
   history: z.array(historyPointSchema),
@@ -65,6 +67,15 @@ export const productExistsSchema = z.object({
   approved: z.boolean(),
 });
 
+export const eanLookupSchema = z.object({
+  found: z.boolean(),
+  name: z.string().nullable(),
+  brand: z.string().nullable(),
+  qty: z.string().nullable(),
+  category: categorySchema.nullable(),
+  imageUrl: z.string().nullable(),
+});
+
 export const createProductResponseSchema = z.object({
   ean: z.string(),
   status: z.literal("PENDING"),
@@ -77,6 +88,7 @@ export type ProductSummary = z.infer<typeof productSummarySchema>;
 export type ProductDetail = z.infer<typeof productDetailSchema>;
 export type SearchProductsResult = z.infer<typeof searchProductsResultSchema>;
 export type ProductExists = z.infer<typeof productExistsSchema>;
+export type EanLookup = z.infer<typeof eanLookupSchema>;
 export type CreateProductResponse = z.infer<typeof createProductResponseSchema>;
 
 export interface SearchProductsParams {
@@ -118,13 +130,20 @@ export async function checkEanExists(ean: string): Promise<ProductExists> {
   return productExistsSchema.parse(data);
 }
 
+// Sugestão de dados do produto (Open Food Facts via backend, cacheado lá).
+export async function lookupEan(ean: string): Promise<EanLookup> {
+  const { data } = await api.get(
+    `/products/ean/${encodeURIComponent(ean)}/lookup`,
+  );
+  return eanLookupSchema.parse(data);
+}
+
 export interface CreateProductInput {
   ean: string;
   name: string;
   brand: string;
   qty: string;
   category: string;
-  imageUrl?: string;
   marketId: string;
   price: number;
 }
