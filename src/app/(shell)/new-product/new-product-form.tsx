@@ -33,6 +33,7 @@ import {
   newProductSchema,
   type NewProductInput,
 } from "@/lib/validations/price-report";
+import { maskBRL, parseBRL } from "@/lib/money";
 
 export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
   const router = useRouter();
@@ -74,6 +75,8 @@ export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lookup.data]);
 
+  const priceField = register("price");
+
   if (!isReady) return null;
 
   function onSubmit(values: NewProductInput) {
@@ -85,7 +88,7 @@ export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
         qty: values.qty,
         category: values.category,
         marketId: values.marketId,
-        price: Number(values.price.replace(",", ".")),
+        price: parseBRL(values.price),
       },
       {
         onSuccess: (result) => {
@@ -232,8 +235,12 @@ export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
             </span>
             <input
               id="price"
-              {...register("price")}
-              placeholder="00,00"
+              {...priceField}
+              onChange={(e) => {
+                e.target.value = maskBRL(e.target.value);
+                void priceField.onChange(e);
+              }}
+              placeholder="0,00"
               inputMode="decimal"
               className="min-w-0 flex-1 border-none bg-transparent text-3xl font-semibold tracking-tight tabular-nums outline-none"
             />

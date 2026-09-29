@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { QueryError } from "@/components/query-error";
+import { ProductImage } from "@/components/product-image";
 import { TRENDING_SEARCHES } from "@/lib/mock/community";
 import { useLocationStore } from "@/stores/location-store";
 import { trustColorVar, trustLevel } from "@/lib/trust";
@@ -211,7 +212,13 @@ export default function HomePage() {
                 href={`/product/${p.ean}`}
                 className="rounded-xl border border-border p-3.5 shadow-xs"
               >
-                <div className="mb-3 aspect-[1.2] w-full rounded-lg bg-muted" />
+                <ProductImage
+                  src={p.imageUrl}
+                  alt={`Foto de ${p.name}`}
+                  sizes="(min-width: 1024px) 220px, 45vw"
+                  className="mb-3 aspect-[1.2] w-full"
+                  iconClassName="size-8"
+                />
                 <div className="text-sm font-medium leading-snug">
                   {p.name}
                 </div>

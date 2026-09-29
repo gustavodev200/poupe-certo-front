@@ -1,13 +1,14 @@
 import { z } from "zod";
 
 import { CATEGORY_CODES } from "@/lib/categories";
+import { parseBRL } from "@/lib/money";
 
 export const priceReportSchema = z.object({
   marketId: z.string().min(1, "Escolha um mercado"),
   price: z
     .string()
     .min(1, "Informe o preço")
-    .refine((v) => Number(v.replace(",", ".")) > 0, "Preço inválido"),
+    .refine((v) => parseBRL(v) > 0, "Preço inválido"),
 });
 
 export type PriceReportInput = z.infer<typeof priceReportSchema>;
@@ -21,7 +22,7 @@ export const newProductSchema = z.object({
   price: z
     .string()
     .min(1, "Informe o preço")
-    .refine((v) => Number(v.replace(",", ".")) > 0, "Preço inválido"),
+    .refine((v) => parseBRL(v) > 0, "Preço inválido"),
 });
 
 export type NewProductInput = z.infer<typeof newProductSchema>;

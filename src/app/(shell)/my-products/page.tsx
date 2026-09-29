@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight, Package, ScanBarcode } from "lucide-react";
+import { ChevronRight, ScanBarcode } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { QueryError } from "@/components/query-error";
+import { ProductImage } from "@/components/product-image";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useMyProducts } from "@/hooks/use-my-products";
 import { cn } from "@/lib/utils";
@@ -36,20 +36,13 @@ function formatDate(iso: string): string {
 function ProductCard({ product }: Readonly<{ product: MyProduct }>) {
   const content = (
     <>
-      <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-muted">
-        {product.imageUrl ? (
-          <Image
-            src={product.imageUrl}
-            alt={`Foto de ${product.name}`}
-            fill
-            sizes="56px"
-            unoptimized
-            className="object-contain"
-          />
-        ) : (
-          <Package className="absolute inset-0 m-auto size-5 opacity-40" />
-        )}
-      </div>
+      <ProductImage
+        src={product.imageUrl}
+        alt={`Foto de ${product.name}`}
+        sizes="56px"
+        className="size-14"
+        iconClassName="size-5"
+      />
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-medium">{product.name}</div>
         <div className="truncate text-xs text-muted-foreground">

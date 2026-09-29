@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { MarketCombobox } from "@/components/market-combobox";
+import { ProductImage } from "@/components/product-image";
 import { NewMarketInline } from "@/components/new-market-inline";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useMarkets } from "@/hooks/use-markets";
@@ -16,6 +17,7 @@ import {
   priceReportSchema,
   type PriceReportInput,
 } from "@/lib/validations/price-report";
+import { maskBRL, parseBRL } from "@/lib/money";
 import type { ProductDetail } from "@/lib/api/products";
 
 export function ConfirmPriceForm({ product }: Readonly<{ product: ProductDetail }>) {
@@ -36,13 +38,15 @@ export function ConfirmPriceForm({ product }: Readonly<{ product: ProductDetail 
     defaultValues: { marketId: "", price: "" },
   });
 
+  const priceField = register("price");
+
   if (!isReady) return null;
 
   function onSubmit(values: PriceReportInput) {
     createPriceReport.mutate(
       {
         marketId: values.marketId,
-        price: Number(values.price.replace(",", ".")),
+        price: parseBRL(values.price),
       },
       {
         onSuccess: (result) => {
@@ -65,7 +69,13 @@ export function ConfirmPriceForm({ product }: Readonly<{ product: ProductDetail 
     <div className="mx-auto max-w-md px-6 py-6">
       <h1 className="mb-1 text-lg font-semibold">Produto identificado</h1>
       <div className="mb-5 flex items-center gap-3.5 rounded-xl border border-border p-4">
-        <div className="size-14 shrink-0 rounded-lg bg-muted" />
+        <ProductImage
+          src={product.imageUrl}
+          alt={`Foto de ${product.name}`}
+          sizes="56px"
+          className="size-14"
+          iconClassName="size-5"
+        />
         <div className="min-w-0">
           <div className="text-[15px] font-medium">{product.name}</div>
           <div className="text-sm text-muted-foreground">
@@ -117,8 +127,12 @@ export function ConfirmPriceForm({ product }: Readonly<{ product: ProductDetail 
             </span>
             <input
               id="price"
-              {...register("price")}
-              placeholder="00,00"
+              {...priceField}
+              onChange={(e) => {
+                e.target.value = maskBRL(e.target.value);
+                void priceField.onChange(e);
+              }}
+              placeholder="0,00"
               inputMode="decimal"
               className="min-w-0 flex-1 border-none bg-transparent text-3xl font-semibold tracking-tight tabular-nums outline-none"
             />

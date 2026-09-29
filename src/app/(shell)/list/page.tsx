@@ -5,6 +5,7 @@ import { ScanBarcode, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { ProductImage } from "@/components/product-image";
 import { QueryError } from "@/components/query-error";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import {
@@ -38,6 +39,13 @@ function ListItemRow({ item }: Readonly<{ item: ShoppingListItem }>) {
         }
         className="size-4.5 shrink-0 accent-primary"
         aria-label={`Marcar ${item.product.name} como comprado`}
+      />
+      <ProductImage
+        src={item.product.imageUrl}
+        alt={`Foto de ${item.product.name}`}
+        sizes="48px"
+        className={cn("size-12", item.purchased && "opacity-50")}
+        iconClassName="size-5"
       />
       <div className="min-w-0 flex-1">
         <div

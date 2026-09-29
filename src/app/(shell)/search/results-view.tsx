@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 
 import { QueryError } from "@/components/query-error";
+import { ProductImage } from "@/components/product-image";
 import { TrustBadge } from "@/components/trust-badge";
 import { cn } from "@/lib/utils";
 import { categoryLabel } from "@/lib/categories";
@@ -94,7 +95,13 @@ export function ResultsView({
               href={`/product/${product.ean}`}
               className="flex flex-wrap items-center gap-3.5 rounded-xl border border-border p-3.5 shadow-xs"
             >
-              <div className="size-18 shrink-0 rounded-lg bg-muted" />
+              <ProductImage
+                src={product.imageUrl}
+                alt={`Foto de ${product.name}`}
+                sizes="72px"
+                className="size-18"
+                iconClassName="size-6"
+              />
               <div className="min-w-[200px] flex-1">
                 <div className="text-[15px] font-medium">{product.name}</div>
                 <div className="mb-2 text-xs text-muted-foreground">
