@@ -38,6 +38,7 @@ export const productSummarySchema = z.object({
   brand: z.string(),
   qty: z.string(),
   category: categorySchema,
+  imageUrl: z.string().nullable().default(null),
   lowestOffer: offerSummarySchema.nullable(),
   offerCount: z.number(),
 });

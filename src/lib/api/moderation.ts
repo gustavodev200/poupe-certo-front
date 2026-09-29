@@ -26,6 +26,7 @@ export const pendingProductSchema = z.object({
   name: z.string(),
   brand: z.string(),
   qty: z.string(),
+  imageUrl: z.string().nullable().default(null),
   category: categorySchema,
   createdBy: z.string(),
   createdAt: z.string(),

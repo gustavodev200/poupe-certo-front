@@ -4,6 +4,7 @@ import { Check, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ProductImage } from "@/components/product-image";
 import {
   Table,
   TableBody,
@@ -88,9 +89,20 @@ function ProductsSection({ products }: { products: PendingProduct[] }) {
             {products.map((p) => (
               <TableRow key={p.ean}>
                 <TableCell>
-                  <div className="font-medium">{p.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {p.brand} · {p.ean}
+                  <div className="flex items-center gap-3">
+                    <ProductImage
+                      src={p.imageUrl}
+                      alt={`Foto de ${p.name}`}
+                      sizes="48px"
+                      className="size-12"
+                      iconClassName="size-5"
+                    />
+                    <div>
+                      <div className="font-medium">{p.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {p.brand} · {p.ean}
+                      </div>
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell>

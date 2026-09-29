@@ -130,7 +130,9 @@ test("cadastrar mercado no meio do formulário mantém os dados e envia cidade/U
 
   await page.goto(`/new-product?ean=${NEW_EAN}`);
   await expect(page.getByLabel("Nome do produto")).toHaveValue("Leite Condensado Moça");
-  await page.getByLabel("Preço na etiqueta").fill("7,49");
+  // Máscara de Reais: dígitos entram como centavos.
+  await page.getByLabel("Preço na etiqueta").pressSequentially("749");
+  await expect(page.getByLabel("Preço na etiqueta")).toHaveValue("7,49");
 
   await page.getByRole("button", { name: "Cadastrar novo mercado" }).click();
   await page.getByPlaceholder("Nome do mercado").fill("ebasico");

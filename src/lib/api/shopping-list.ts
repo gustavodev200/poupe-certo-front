@@ -7,6 +7,7 @@ const productRefSchema = z.object({
   name: z.string(),
   brand: z.string(),
   qty: z.string(),
+  imageUrl: z.string().nullable().default(null),
 });
 
 const marketRefSchema = z.object({

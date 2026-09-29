@@ -1,7 +1,6 @@
 "use client";
 
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { AxiosError } from "axios";
 import { Check, RefreshCw, ScanBarcode, ThumbsUp, Trophy } from "lucide-react";
@@ -17,6 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TrustBadge } from "@/components/trust-badge";
+import { ProductImage } from "@/components/product-image";
 import { cn } from "@/lib/utils";
 import { categoryLabel } from "@/lib/categories";
 import { formatAge } from "@/lib/trust";
@@ -91,18 +91,13 @@ export function ProductView({ ean }: Readonly<{ ean: string }>) {
       </p>
 
       <div className="mb-3 flex flex-wrap gap-5 rounded-xl border border-border p-5 shadow-xs">
-        <div className="relative size-35 shrink-0 overflow-hidden rounded-lg bg-muted">
-          {product.imageUrl && (
-            <Image
-              src={product.imageUrl}
-              alt={`Foto de ${product.name}`}
-              fill
-              sizes="140px"
-              unoptimized
-              className="object-contain"
-            />
-          )}
-        </div>
+        <ProductImage
+          src={product.imageUrl}
+          alt={`Foto de ${product.name}`}
+          sizes="140px"
+          className="size-35"
+          iconClassName="size-10"
+        />
         <div className="min-w-60 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div>
