@@ -15,7 +15,8 @@ interface MockRoute {
   pattern: RegExp;
   handler: (
     match: string[],
-    body: unknown
+    body: unknown,
+    query: URLSearchParams
   ) => { status?: number; json: unknown };
 }
 
@@ -50,7 +51,8 @@ function ensureServer(port: number) {
       return;
     }
 
-    const pathname = (req.url ?? "").split("?")[0];
+    const url = new URL(req.url ?? "/", "http://mock");
+    const pathname = url.pathname;
     void readBody(req).then((body) => {
       const route = routes.find(
         (r) => r.method === req.method && r.pattern.test(pathname)
@@ -61,7 +63,7 @@ function ensureServer(port: number) {
         return;
       }
       const match = pathname.match(route.pattern);
-      const result = route.handler(match ? match.slice(1) : [], body);
+      const result = route.handler(match ? match.slice(1) : [], body, url.searchParams);
       res.writeHead(result.status ?? 200, { "content-type": "application/json" });
       res.end(JSON.stringify(result.json));
     });

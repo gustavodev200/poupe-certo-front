@@ -9,6 +9,10 @@ export const profileSchema = z.object({
   avatarUrl: z.string().nullable(),
   city: z.string().nullable(),
   uf: z.string().nullable(),
+  // Default cobre o intervalo de deploy em que o front novo fala com um
+  // back que ainda não devolve o campo — sem ele o parse do perfil inteiro
+  // falharia. Só decide exibir o item "Admin"; a proteção é o OperatorGuard.
+  isOperator: z.boolean().default(false),
   createdAt: z.string(),
 });
 
@@ -76,4 +80,47 @@ export async function getMyContributions(
 ): Promise<ContributionsResult> {
   const { data } = await api.get("/users/me/contributions", { params });
   return contributionsResultSchema.parse(data);
+}
+
+export const PRODUCT_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
+export type ProductStatus = (typeof PRODUCT_STATUSES)[number];
+
+const myProductSchema = z.object({
+  ean: z.string(),
+  name: z.string(),
+  brand: z.string(),
+  qty: z.string(),
+  category: z.string(),
+  imageUrl: z.string().nullable(),
+  status: z.enum(PRODUCT_STATUSES),
+  createdAt: z.string(),
+  reviewedAt: z.string().nullable(),
+});
+
+export const myProductsResultSchema = z.object({
+  items: z.array(myProductSchema),
+  page: z.number(),
+  pageSize: z.number(),
+  total: z.number(),
+  counts: z.object({
+    PENDING: z.number(),
+    APPROVED: z.number(),
+    REJECTED: z.number(),
+  }),
+});
+
+export type MyProduct = z.infer<typeof myProductSchema>;
+export type MyProductsResult = z.infer<typeof myProductsResultSchema>;
+
+export interface MyProductsParams {
+  status?: ProductStatus;
+  page?: number;
+  pageSize?: number;
+}
+
+export async function getMyProducts(
+  params: MyProductsParams = {},
+): Promise<MyProductsResult> {
+  const { data } = await api.get("/users/me/products", { params });
+  return myProductsResultSchema.parse(data);
 }
