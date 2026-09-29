@@ -66,19 +66,22 @@ export function SiteHeader() {
         </Button>
 
         {/* Em md+ a marca já aparece no topo do menu lateral. */}
-        <Link href="/" className="flex shrink-0 items-center gap-2 md:hidden">
+        <Link
+          href="/"
+          aria-label="Poupe Certo — início"
+          className="flex shrink-0 items-center md:hidden"
+        >
           <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <ScanBarcode className="size-4.5" />
           </div>
-          <span className="text-lg font-bold tracking-tight">Poupe Certo</span>
         </Link>
 
         <Link
           href="/onboarding"
-          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-sm font-medium"
+          className="flex min-w-0 items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-sm font-medium"
         >
-          <MapPin className="size-3.5 opacity-55" />
-          {cityLabel}
+          <MapPin className="size-3.5 shrink-0 opacity-55" />
+          <span className="truncate">{cityLabel}</span>
         </Link>
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
