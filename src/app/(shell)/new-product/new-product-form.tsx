@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
-import { Info, Plus } from "lucide-react";
+import { Info, Loader2, Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -22,9 +23,11 @@ import {
 import { MarketCombobox } from "@/components/market-combobox";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useCreateProduct } from "@/hooks/use-create-product";
+import { useEanLookup } from "@/hooks/use-ean-lookup";
 import { useMarkets, useCreateMarket } from "@/hooks/use-markets";
 import { mapApiError } from "@/lib/api/errors";
 import { CATEGORIES } from "@/lib/categories";
+import { pickPrefill } from "@/lib/ean-prefill";
 import {
   createMarketSchema,
   newProductSchema,
@@ -38,6 +41,9 @@ export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
   const createProduct = useCreateProduct();
   const [showNewMarket, setShowNewMarket] = useState(false);
 
+  const lookup = useEanLookup(ean, isReady);
+  const suggestion = lookup.data?.found ? lookup.data : undefined;
+
   const markets = useMarkets();
   const createMarket = useCreateMarket();
 
@@ -46,8 +52,9 @@ export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
     control,
     handleSubmit,
     setValue,
+    getValues,
     setError,
-    formState: { errors },
+    formState: { errors, dirtyFields },
   } = useForm<NewProductInput>({
     resolver: zodResolver(newProductSchema),
     defaultValues: {
@@ -69,6 +76,16 @@ export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
     resolver: zodResolver(createMarketSchema),
     defaultValues: { name: "" },
   });
+
+  // Aplica a sugestão uma vez, quando chega — só em campos intocados.
+  useEffect(() => {
+    if (!lookup.data) return;
+    const prefill = pickPrefill(lookup.data, getValues(), dirtyFields);
+    for (const [field, value] of Object.entries(prefill)) {
+      setValue(field as keyof typeof prefill, value, { shouldValidate: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lookup.data]);
 
   if (!isReady) return null;
 
@@ -130,6 +147,23 @@ export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
             EAN <span className="font-mono">{ean}</span> — preencha os dados e
             ele passará por aprovação.
           </p>
+          {lookup.isLoading && (
+            <p className="mt-1.5 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Loader2 className="size-3.5 animate-spin" />
+              Buscando dados do produto…
+            </p>
+          )}
+          {suggestion && (
+            <p className="mt-1.5 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Sparkles className="size-3.5" />
+              Preenchemos com dados do Open Food Facts — confira antes de enviar.
+            </p>
+          )}
+          {(lookup.isError || (lookup.data && !lookup.data.found)) && (
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              Não encontramos dados desse código — preencha manualmente.
+            </p>
+          )}
         </div>
       </div>
 
@@ -256,9 +290,21 @@ export function NewProductForm({ ean }: Readonly<{ ean: string }>) {
             <p className="text-sm text-destructive">{errors.price.message}</p>
           )}
         </div>
-        <div className="rounded-lg border border-dashed border-border p-5 text-center text-sm text-muted-foreground">
-          Toque para usar a câmera (opcional)
-        </div>
+        {suggestion?.imageUrl && (
+          <div className="flex items-center gap-3 rounded-lg border border-border p-3">
+            <Image
+              src={suggestion.imageUrl}
+              alt={`Foto de ${suggestion.name ?? "produto"}`}
+              width={72}
+              height={72}
+              unoptimized
+              className="size-18 shrink-0 rounded-md bg-muted object-contain"
+            />
+            <p className="text-sm text-muted-foreground">
+              Esta foto será salva junto com o produto.
+            </p>
+          </div>
+        )}
         {createProduct.isError &&
           !(
             createProduct.error instanceof AxiosError &&

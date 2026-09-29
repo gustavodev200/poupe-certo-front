@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { House, ScanBarcode, User } from "lucide-react";
+import { House, ListChecks, ScanBarcode, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -9,6 +9,11 @@ export function MobileActionBar() {
       <Button asChild variant="outline" size="icon-lg">
         <Link href="/">
           <House className="size-4.5 opacity-65" />
+        </Link>
+      </Button>
+      <Button asChild variant="outline" size="icon-lg">
+        <Link href="/list">
+          <ListChecks className="size-4.5 opacity-65" />
         </Link>
       </Button>
       <Button asChild className="flex-1 gap-2">

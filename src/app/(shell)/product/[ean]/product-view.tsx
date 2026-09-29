@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { AxiosError } from "axios";
-import { Heart, RefreshCw, ScanBarcode, ThumbsUp, Trophy } from "lucide-react";
+import { Check, RefreshCw, ScanBarcode, ThumbsUp, Trophy } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import { categoryLabel } from "@/lib/categories";
 import { formatAge } from "@/lib/trust";
 import { useConfirmPrice } from "@/hooks/use-price-reports";
 import { useProductDetail } from "@/hooks/use-products";
+import { useAddToList, useShoppingList } from "@/hooks/use-shopping-list";
 import { mapApiError } from "@/lib/api/errors";
 
 function formatPrice(price: number): string {
@@ -29,8 +30,12 @@ function formatPrice(price: number): string {
 }
 
 export function ProductView({ ean }: Readonly<{ ean: string }>) {
-  const [favorite, setFavorite] = useState(false);
   const confirmPrice = useConfirmPrice(ean);
+  const addToList = useAddToList();
+  const shoppingList = useShoppingList();
+  const alreadyInList = shoppingList.data?.some(
+    (item) => item.product.ean === ean
+  );
   const { data: product, isLoading, isError, error, refetch } =
     useProductDetail(ean);
 
@@ -86,7 +91,18 @@ export function ProductView({ ean }: Readonly<{ ean: string }>) {
       </p>
 
       <div className="mb-3 flex flex-wrap gap-5 rounded-xl border border-border p-5 shadow-xs">
-        <div className="size-35 shrink-0 rounded-lg bg-muted" />
+        <div className="relative size-35 shrink-0 overflow-hidden rounded-lg bg-muted">
+          {product.imageUrl && (
+            <Image
+              src={product.imageUrl}
+              alt={`Foto de ${product.name}`}
+              fill
+              sizes="140px"
+              unoptimized
+              className="object-contain"
+            />
+          )}
+        </div>
         <div className="min-w-60 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -103,19 +119,6 @@ export function ProductView({ ean }: Readonly<{ ean: string }>) {
                 EAN {product.ean}
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setFavorite((f) => !f)}
-              className={cn(favorite && "border-destructive/40")}
-            >
-              <Heart
-                className={cn(
-                  "size-4",
-                  favorite && "fill-destructive text-destructive"
-                )}
-              />
-            </Button>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-2">
             <div className="rounded-lg border border-trust-fresh/35 bg-trust-fresh/8 p-2.5">
@@ -174,10 +177,17 @@ export function ProductView({ ean }: Readonly<{ ean: string }>) {
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button
-              className="flex-1"
-              onClick={() => toast.success("Adicionado à sua lista")}
+              className="flex-1 gap-1.5"
+              disabled={alreadyInList || addToList.isPending}
+              onClick={() =>
+                addToList.mutate(product.ean, {
+                  onSuccess: () => toast.success("Adicionado à sua lista"),
+                  onError: (error) => toast.error(mapApiError(error)),
+                })
+              }
             >
-              Adicionar à lista
+              {alreadyInList && <Check className="size-4" />}
+              {alreadyInList ? "Já está na lista" : "Adicionar à lista"}
             </Button>
             <Button asChild variant="outline" className="flex-1 gap-1.5">
               <Link href="/scan">

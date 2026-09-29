@@ -54,6 +54,9 @@ export default function EscanearPage() {
   const activeRef = useRef(true);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const detectorRef = useRef<BarcodeDetector | null>(null);
+  // Trava: loop de detecção, botão "Capturar" e Enter no input podem disparar
+  // juntos — só a primeira leitura segue para a verificação/navegação.
+  const handledRef = useRef(false);
 
   const [scanState, setScanState] = useState<ScanState>("idle");
   const [eanInput, setEanInput] = useState("");
@@ -65,6 +68,7 @@ export default function EscanearPage() {
       const known = result.exists && result.approved;
       router.push(known ? `/confirm-price?ean=${ean}` : `/new-product?ean=${ean}`);
     } catch {
+      handledRef.current = false;
       setScanState("error");
     }
   }
@@ -75,6 +79,8 @@ export default function EscanearPage() {
   }
 
   function onDetected(ean: string) {
+    if (handledRef.current) return;
+    handledRef.current = true;
     setScanState("found");
     timerRef.current = setTimeout(() => {
       stopCamera();
